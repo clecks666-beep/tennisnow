@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/gamification/presentation/screens/achievements_screen.dart';
 import '../features/progress/presentation/screens/progress_screen.dart';
 import '../features/session_logging/presentation/screens/log_session_screen.dart';
 import '../features/session_logging/presentation/screens/session_list_screen.dart';
@@ -48,6 +49,11 @@ class AppRouter {
         path: '/log',
         parentNavigatorKey: _rootKey, // present above the shell (full screen)
         builder: (context, state) => const LogSessionScreen(),
+      ),
+      GoRoute(
+        path: '/achievements',
+        parentNavigatorKey: _rootKey, // detail screen above the shell
+        builder: (context, state) => const AchievementsScreen(),
       ),
     ],
   );

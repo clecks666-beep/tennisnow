@@ -123,6 +123,27 @@ ESTABLISHED REUSABLE PATTERNS — PROGRESS / DASHBOARDS (first built in features
   (Sessions, Progress) with preserved state. The "Log" FAB lives in the shell (reachable from every
   tab) — do NOT duplicate it inside tab screens. Add a tab = add a StatefulShellBranch.
 
+ESTABLISHED REUSABLE PATTERNS — GAMIFICATION (first built in features/gamification)
+----------------------------------------------------------------------------------
+- DERIVED-NOT-STORED: streaks and badges are COMPUTED from existing sessions — no new table, no
+  migration. Same approach as progress. Prefer deriving over persisting until there's a real reason
+  to store (e.g. "newly unlocked" toasts later would need a tiny persisted marker).
+- STREAK LOGIC is a pure StreakCalculator.compute(dates, today) with an INJECTED clock (repository
+  takes `now`) so it's deterministic and unit-tested. This is the date-window logic deferred earlier;
+  it lives in Dart on purpose (consecutive-day runs aren't portable SQL). Grace rule: a streak stays
+  alive if today OR yesterday is logged.
+- COMBINING STREAMS: lib/core/utils/combineLatest2 merges two reactive sources (SQL aggregates +
+  dates) without rxdart. Reuse it instead of adding a dependency or nesting StreamBuilders.
+- BADGES: a small curated catalog (BadgeCatalog.all) of pure BadgeDefinitions; evaluate(inputs)
+  returns Achievements (earned + progress). Add a badge = add a definition + an icon mapping in
+  presentation (badgeIconFor). Keep the set small and meaningful (anti-gimmick rule).
+- CROSS-FEATURE UI COMPOSITION is allowed via a feature's PUBLIC widget (Progress embeds
+  gamification's GamificationStrip). Never import another feature's data/domain internals — see
+  CLAUDE.md cross-feature rule.
+- SUPPLEMENTARY WIDGET STATE EXCEPTION: a secondary widget on an already state-complete screen may
+  render nothing while loading/on error (GamificationStrip uses maybeWhen→shrink) instead of a
+  spinner. Only for non-critical, fast, local data — never for a screen's primary content.
+
 DRIFT GOTCHAS (learned)
 -----------------------
 - Default SQL column names are snake_case of the Dart getter (playedAt -> played_at). Prefer the

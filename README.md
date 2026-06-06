@@ -54,6 +54,7 @@ lib/
   features/
     session_logging/  # log a session + history (domain/data/presentation)
     progress/         # aggregate stats, performance trend, insight (read-only)
+    gamification/     # daily streak + badges, derived from sessions (read-only)
 ```
 
 Dependency rule: `presentation → domain ← data`. The domain layer is pure; the
@@ -68,9 +69,12 @@ UI talks to repository interfaces, never the database.
 - **Progress** — aggregate stats (sessions, win rate, average
   performance/mood/energy), a performance trend sparkline, and a motivating
   insight headline. All aggregation runs in SQL; the view is read-only.
+- **Gamification** — a daily logging streak (with a one-day grace) and a curated
+  set of badges with earned/locked + progress, surfaced atop Progress and in a
+  full Achievements screen. Fully derived from sessions — no extra storage.
 
 Navigation is a two-tab bottom bar (Sessions / Progress) with an always-present
 "Log session" action.
 
-Next up (not yet built): lightweight gamification (streaks/badges), onboarding.
+Next up (not yet built): onboarding, equipment as a structured entity.
 ```

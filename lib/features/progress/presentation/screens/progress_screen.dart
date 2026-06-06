@@ -8,6 +8,7 @@ import '../../../../design_system/widgets/async_value_view.dart';
 import '../../../../design_system/widgets/empty_state.dart';
 import '../../../../design_system/widgets/mini_line_chart.dart';
 import '../../../../design_system/widgets/stat_card.dart';
+import '../../../gamification/presentation/widgets/gamification_strip.dart';
 import '../../domain/progress_insight.dart';
 import '../../domain/session_stats.dart';
 import '../../domain/trend_point.dart';
@@ -56,6 +57,10 @@ class _ProgressContent extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.screen),
       children: [
+        // Motivation first: streak + badges (supplementary, self-stateful).
+        const GamificationStrip(),
+        const SizedBox(height: AppSpacing.lg),
+
         _InsightBanner(text: ProgressInsight.headline(stats)),
         const SizedBox(height: AppSpacing.lg),
 

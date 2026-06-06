@@ -129,6 +129,19 @@ class AppDatabase extends _$AppDatabase {
         );
   }
 
+  /// Played-at timestamps of all non-deleted sessions, newest first. Selects a
+  /// single column (not whole rows) for the streak calculation, which is
+  /// inherently sequential and not expressible in portable SQL.
+  Stream<List<DateTime>> watchActiveSessionDates() {
+    final query = selectOnly(sessions)
+      ..addColumns([sessions.playedAt])
+      ..where(sessions.deletedAt.isNull())
+      ..orderBy([OrderingTerm.desc(sessions.playedAt)]);
+    return query
+        .watch()
+        .map((rows) => rows.map((r) => r.read(sessions.playedAt)!).toList());
+  }
+
   /// Most recent sessions that have a performance rating, newest first.
   /// Bounded by [limit] so this never scans the full history (CLAUDE.md §6).
   Stream<List<Session>> watchRecentRatedSessions({required int limit}) {
