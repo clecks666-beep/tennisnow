@@ -1,0 +1,54 @@
+name: web
+
+# Builds the Flutter web app and publishes it to GitHub Pages so it can be
+# tested in a browser. Flutter is pinned to the version the code targets.
+on:
+  push:
+    branches: ["claude/exciting-volta-hAupn"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.22.0
+          channel: stable
+          cache: true
+
+      - run: flutter --version
+
+      # Generate the web platform folder for this existing project.
+      - run: flutter create . --platforms=web --project-name tennisnow
+
+      - run: flutter pub get
+
+      # Drift code generation (creates *.g.dart).
+      - run: dart run build_runner build --delete-conflicting-outputs
+
+      # Base href must match the project-site path (/<repo>/).
+      - run: flutter build web --release --base-href /tennisnow/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
