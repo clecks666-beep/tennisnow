@@ -1,0 +1,48 @@
+name: build
+
+# Produces downloadable builds for testing (no GitHub Pages needed, works on a
+# private repo). Flutter is pinned to the version the code targets.
+on:
+  push:
+    branches: ["claude/exciting-volta-hAupn"]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.22.0
+          channel: stable
+          cache: true
+      - run: flutter --version
+      - run: flutter create . --platforms=windows --project-name tennisnow
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter build windows --release
+      # The Release folder is a self-contained app: tennisnow.exe + DLLs + data.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tennisnow-windows
+          path: build/windows/x64/runner/Release
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.22.0
+          channel: stable
+          cache: true
+      - run: flutter create . --platforms=web --project-name tennisnow
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      # Base href "/" so it can be served from a local server root.
+      - run: flutter build web --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tennisnow-web
+          path: build/web
