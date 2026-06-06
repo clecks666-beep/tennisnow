@@ -1,0 +1,38 @@
+name: tennisnow
+description: A personal tennis companion app for hobby and club players — track sessions, understand performance and feeling over time, stay motivated.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management (manual providers — no codegen).
+  flutter_riverpod: ^2.5.1
+
+  # Navigation.
+  go_router: ^14.2.0
+
+  # Local-first persistence (sync-ready schema). Drift uses build_runner codegen.
+  drift: ^2.18.0
+  drift_flutter: ^0.2.0
+
+  # Client-generated UUIDs for the sync-ready invariant.
+  uuid: ^4.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+  # Drift code generation: run `dart run build_runner build`.
+  drift_dev: ^2.18.0
+  build_runner: ^2.4.11
+
+flutter:
+  uses-material-design: true

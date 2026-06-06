@@ -1,0 +1,18 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+  errors:
+    # Keep the codebase honest: unused code and dead null-aware checks are errors.
+    unused_import: error
+    unused_local_variable: error
+
+linter:
+  rules:
+    - prefer_const_constructors
+    - prefer_const_constructors_in_immutables
+    - prefer_final_locals
+    - always_declare_return_types
+    - avoid_print
+    - require_trailing_commas

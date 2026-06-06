@@ -81,6 +81,40 @@ KEY CONSTRAINTS
   record significant choices in docs/decisions.md.
 
 
+ESTABLISHED REUSABLE PATTERNS (first built in features/session_logging — reuse, don't reinvent)
+---------------------------------------------------------------------------------------------
+- DESIGN SYSTEM COMPONENTS in lib/design_system/widgets: PrimaryButton, SelectableChipGroup<T>
+  (generic single-select chips — used for type/result/duration), RatingSelector (1-5, optional),
+  SectionLabel, EmptyState, AsyncValueView<T>. ALWAYS check here before building UI.
+- AsyncValueView<T> is the standard way to satisfy do-not-break rule #5 (loading/error/data) on
+  every screen. Use it instead of hand-rolling AsyncValue.when. Empty state is handled separately
+  via EmptyState inside the data builder.
+- STATE: live data via StreamProvider over a Drift .watch query (reactive, no polling). Mutations
+  via an AsyncNotifier controller exposing loading/error/success (see LogSessionController). UI reads
+  the repository INTERFACE through sessionRepositoryProvider — never Drift directly.
+- VALUE OBJECTS enforce invariants in shared/domain (e.g. Rating 1-5 with tryFrom for safe parsing).
+- MAPPER pattern (SessionMapper) converts Drift rows <-> domain entities so the domain stays pure.
+  Drift's generated row class for table `Sessions` is named `Session`; the domain entity is
+  `TennisSession` to avoid the name clash. Keep this naming.
+
+CODEGEN & ENVIRONMENT NOTES (easy to trip on)
+---------------------------------------------
+- Codegen surface is intentionally LIMITED TO DRIFT. We deliberately avoided Freezed and
+  riverpod_generator (hand-written immutable entities + manual providers) to keep the build simple.
+  Do not introduce new codegen casually.
+- app_database.g.dart is git-ignored and MUST be regenerated: `dart run build_runner build`.
+  The project will not compile until `flutter create .`, `flutter pub get`, and build_runner have run.
+- Flutter version floor is 3.22. Use withOpacity (NOT withValues — newer API) and CardTheme (not
+  CardThemeData) to stay compatible with the floor. Re-check if the floor is raised.
+
+UX PATTERNS THAT MUST STAY (session logging)
+--------------------------------------------
+- The log form defaults to type=Training and playedAt=now, so Save works in one tap (<30s). Every
+  other field is optional and must NEVER block saving. Optional chips/ratings clear on re-tap.
+- After save: pop to history + confirmation SnackBar. Capture ScaffoldMessenger BEFORE pop (the
+  screen's own context is defunct afterward). History updates itself via the stream.
+- Destructive actions are soft-delete + Undo SnackBar (recoverable), backed by the deletedAt column.
+
 HOW THIS MEMORY EVOLVES
 -----------------------
 - ADD an entry when a new pitfall is hit, a recurring mistake appears, a durable UX insight is found,
