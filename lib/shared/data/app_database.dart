@@ -33,6 +33,22 @@ class Sessions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Drift table for the user's equipment (rackets, strings, shoes…). Same
+/// sync-ready invariant as sessions. Named *Items* so the generated row class is
+/// `EquipmentItem`, leaving the domain entity free to be `Equipment` (mirrors the
+/// Sessions/`Session` vs `TennisSession` split).
+class EquipmentItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get type => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Plain data-layer carrier for aggregate results. Kept out of the domain so the
 /// shared DB never imports a feature's domain types; repositories map it across.
 class SessionAggregates {
@@ -55,7 +71,7 @@ class SessionAggregates {
   });
 }
 
-@DriftDatabase(tables: [Sessions])
+@DriftDatabase(tables: [Sessions, EquipmentItems])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -63,7 +79,20 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  /// Schema migrations. ANY schema change must bump [schemaVersion] and add an
+  /// upgrade step here so existing on-device data is never broken (CLAUDE.md §2,
+  /// ADR-006). v1→v2 adds the equipment table.
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(equipmentItems);
+          }
+        },
+      );
 
   // ---- session_logging reads/writes ----
 
@@ -150,6 +179,33 @@ class AppDatabase extends _$AppDatabase {
           ..orderBy([(t) => OrderingTerm.desc(t.playedAt)])
           ..limit(limit))
         .watch();
+  }
+
+  // ---- equipment reads/writes ----
+
+  /// Non-archived equipment, alphabetical (soft-delete filtered in SQL).
+  Stream<List<EquipmentItem>> watchActiveEquipment() {
+    return (select(equipmentItems)
+          ..where((t) => t.deletedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+        .watch();
+  }
+
+  Future<void> upsertEquipment(EquipmentItemsCompanion entry) {
+    return into(equipmentItems).insertOnConflictUpdate(entry);
+  }
+
+  Future<void> setEquipmentDeletedAt(
+    String id,
+    DateTime? deletedAt,
+    DateTime updatedAt,
+  ) {
+    return (update(equipmentItems)..where((t) => t.id.equals(id))).write(
+      EquipmentItemsCompanion(
+        deletedAt: Value(deletedAt),
+        updatedAt: Value(updatedAt),
+      ),
+    );
   }
 }
 

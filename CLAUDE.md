@@ -57,6 +57,8 @@ lib/
 
 **Sync-ready invariant (do not break):** every persisted entity carries `id` (UUID v4, generated client-side), `createdAt`, `updatedAt`, and a soft-delete flag. This makes a future cloud-sync repository a drop-in addition, not a migration.
 
+**Schema migrations (do not break):** the app has real on-device data. ANY Drift schema change MUST bump `schemaVersion` and add an additive step to the `MigrationStrategy` — never drop/recreate. See ADR-006.
+
 ---
 
 ## 3. CODING RULES

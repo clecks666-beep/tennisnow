@@ -9,6 +9,7 @@ import '../../../../design_system/widgets/rating_selector.dart';
 import '../../../../design_system/widgets/section_label.dart';
 import '../../../../design_system/widgets/selectable_chip_group.dart';
 import '../../../../shared/domain/session_type.dart';
+import '../../../equipment/presentation/widgets/equipment_picker_field.dart';
 import '../../../settings/presentation/providers/settings_controller.dart';
 import '../../domain/match_result.dart';
 import '../providers/log_session_controller.dart';
@@ -34,7 +35,9 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
   int? _mood;
   int? _energy;
 
-  final TextEditingController _equipmentController = TextEditingController();
+  /// Selected equipment NAME, chosen via the picker (stored on the session).
+  String? _equipmentName;
+
   final TextEditingController _noteController = TextEditingController();
 
   @override
@@ -46,7 +49,6 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
   @override
   void dispose() {
-    _equipmentController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -59,7 +61,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
       performance: _performance,
       mood: _mood,
       energy: _energy,
-      equipment: _equipmentController.text,
+      equipment: _equipmentName,
       note: _noteController.text,
     );
 
@@ -177,12 +179,10 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
                   const SizedBox(height: AppSpacing.lg),
                   const SectionLabel('Equipment', optional: true),
-                  TextField(
-                    controller: _equipmentController,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. Pure Aero · fresh strings',
-                    ),
+                  EquipmentPickerField(
+                    value: _equipmentName,
+                    onChanged: (name) =>
+                        setState(() => _equipmentName = name),
                   ),
 
                   const SizedBox(height: AppSpacing.lg),

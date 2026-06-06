@@ -57,6 +57,7 @@ lib/
     progress/         # aggregate stats, performance trend, insight (read-only)
     gamification/     # daily streak + badges, derived from sessions (read-only)
     settings/         # device-local personalization (name, default type, etc.)
+    equipment/        # manage gear (rackets/strings/shoes); pick it when logging
 ```
 
 Two persistence stores by design: **Drift** for sync-ready domain data (sessions),
@@ -84,6 +85,9 @@ UI talks to repository interfaces, never the database.
 - **Settings** — device-local personalization: a display name (personalizes the
   greeting), a default session type (so the quick-log starts on your usual mode),
   replay the intro, and an about/privacy note. Reached via the gear on Sessions.
+- **Equipment** — manage your rackets, strings and shoes (add/edit/archive with
+  undo), then pick gear when logging instead of typing it. Sync-ready Drift
+  entity; introduced the app's first schema migration (ADR-006).
 
 Navigation is a two-tab bottom bar (Sessions / Progress), a "Log session" action,
 and a Settings screen.

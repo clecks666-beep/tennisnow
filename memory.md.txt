@@ -177,6 +177,17 @@ ONBOARDING / ROUTER GATE PATTERN
 - Onboarding is skippable and shown once; it exists to beat the empty-app problem — keep it short and
   value-first, never a manual.
 
+DB MIGRATIONS — MANDATORY ON ANY SCHEMA CHANGE (since equipment, ADR-006)
+-------------------------------------------------------------------------
+- There is real on-device data (incl. web testers). NEVER drop/recreate. Bump AppDatabase
+  schemaVersion and add an additive onUpgrade step (MigrationStrategy). v1->v2 created equipment_items.
+- Pattern: onCreate: (m) => m.createAll(); onUpgrade: if (from < N) await m.createTable(newTable);
+- Table-vs-entity naming (avoid the generated-class clash): table EquipmentItems -> row EquipmentItem,
+  domain entity Equipment (same trick as Sessions/Session vs TennisSession).
+- Equipment on a session is stored DENORMALIZED as the name string in sessions.equipment (no sessions
+  migration, log flow unchanged). A future equipmentId FK is the clean upgrade when building
+  equipment-vs-performance analytics; until then, correlation can group by name.
+
 DRIFT GOTCHAS (learned)
 -----------------------
 - Default SQL column names are snake_case of the Dart getter (playedAt -> played_at). Prefer the

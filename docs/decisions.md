@@ -40,3 +40,10 @@ Do not log trivial or easily reversible choices here.
 - **Decision:** Store device-local UI preferences in `shared_preferences` (via `AppPreferences` in `shared/data`), kept entirely separate from the Drift domain database.
 - **Rationale:** Keeps the sync-ready Drift schema for domain data only; avoids a DB migration for a non-domain flag; uses the standard, store-safe mechanism. Per-device UX state should never sync, so this separation is correct by design.
 - **Consequences:** `main()` loads SharedPreferences before first frame and injects it via `sharedPreferencesProvider`. Future device-local settings (e.g. theme) extend `AppPreferences`; anything that must sync stays in Drift.
+
+## ADR-006 — Versioned Drift schema with migrations
+- **Status:** Accepted (2026-06-06)
+- **Context:** The Equipment feature added a table — the first schema change after real users (web testers) had a v1 database. Dropping/recreating would destroy their data.
+- **Decision:** Bump `schemaVersion` on every schema change and implement an additive `MigrationStrategy` (`onCreate: createAll`, `onUpgrade` applies incremental steps). v1→v2 creates the `equipment_items` table. Equipment chosen on a session is stored denormalized as the equipment **name** on `sessions.equipment` (no sessions migration); a future `equipmentId` FK is the clean upgrade when correlation analytics are built.
+- **Rationale:** Protects on-device data (and the future cloud-sync path); keeps the sacred log flow and existing queries untouched.
+- **Consequences:** ANY future schema change MUST bump the version and add a migration step (now a CLAUDE.md rule). Renaming equipment does not rewrite past sessions' stored names — acceptable for v1, revisited with the FK.

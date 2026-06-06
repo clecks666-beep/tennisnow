@@ -95,6 +95,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
 
           const SizedBox(height: AppSpacing.lg),
+          const SectionLabel('Gear'),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.sports_tennis_rounded,
+                  color: AppColors.primary),
+              title: const Text('My equipment'),
+              subtitle: const Text('Manage your rackets, strings and shoes'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/equipment'),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
           const SectionLabel('Help'),
           Card(
             child: ListTile(
