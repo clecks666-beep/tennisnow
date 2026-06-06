@@ -1,0 +1,90 @@
+tennisnow — SYSTEM MEMORY
+=========================
+
+PURPOSE
+-------
+This is long-term memory: things Claude must NEVER forget while working on tennisnow.
+It is NOT a log, task list, or progress tracker. Store only durable knowledge:
+critical decisions, pitfalls, risky areas, UX insights, recurring mistakes, key constraints.
+If it would be stale next week, it does NOT belong here.
+
+
+CRITICAL ARCHITECTURAL DECISIONS (the "why", so they're never re-litigated blindly)
+-----------------------------------------------------------------------------------
+- LOCAL-FIRST, SYNC-READY. v1 stores everything on-device (no login, offline, private, cheap,
+  zero logging friction). Chosen because logging friction is the #1 product risk and cloud adds
+  none of the core value yet. The schema is sync-ready (see invariant below) so cloud accounts +
+  multi-device sync can be ADDED later without a rewrite. Do not add a backend prematurely.
+- FLUTTER + DART, single codebase. Chosen for store-ready iOS+Android, app-like performance,
+  and strong charts/animation ecosystem (trends + motivation are visual). Avoids 2x native cost.
+- RIVERPOD for state, GO_ROUTER for navigation, DRIFT/SQLite for persistence. Drift over a
+  key-value store because trends/analytics need real relational queries done in SQL, not Dart loops.
+- FEATURE-FIRST + CLEAN LAYERING (domain/data/presentation). Domain is pure (no Flutter, no I/O).
+  Dependencies point inward only. UI never touches the DB directly.
+
+THE NON-NEGOTIABLE INVARIANT
+----------------------------
+Every persisted entity has: id (UUID v4, client-generated) + createdAt + updatedAt + soft-delete flag.
+This single rule is what keeps future cloud sync a drop-in instead of a painful migration.
+NEVER persist an entity without it.
+
+
+KNOWN PITFALLS / RISKY AREAS
+----------------------------
+- LOGGING FRICTION = DEATH. If logging a session ever takes more than a few seconds or many taps,
+  retention collapses. Guard the quick-log path on every change. Optional context (feeling/equipment)
+  must never block saving.
+- EMPTY-APP PROBLEM. New users with no data see no trends -> no value -> churn. Onboarding and
+  motivating empty states must create early wins. Never ship a blank dead-end screen.
+- GAMIFICATION CAN BACKFIRE. Done wrong it feels gimmicky/naggy and cheapens a "serious improvement"
+  app. Keep it lightweight, meaningful, earned. No spammy notifications.
+- SCOPE CREEP TOWARD CLUBS/EVENTS. The clean-foundation goal can mutate into over-engineering or into
+  building future features early. Architect for extension; BUILD only the personal loop.
+- DESIGN DRIFT. Without discipline, one-off widgets/colors accumulate into visual chaos. The
+  design_system/ module is the ONLY source of visual truth — extend it, don't bypass it.
+- WIDE REBUILDS. Coarse Riverpod providers cause rebuild storms and jank. Keep providers granular.
+- TRENDS IN DART. Aggregating full tables in Dart loops gets slow as history grows. Do aggregation
+  in SQL (Drift).
+
+
+UX INSIGHTS THAT MUST REMAIN
+----------------------------
+- The product IS the loop: play -> fast log -> see trends -> stay motivated -> return. Every feature
+  must serve this loop or it is out of scope for now.
+- Priority order for all trade-offs: UX > clarity > maintainability > performance > technical elegance.
+- The unique selling point is correlating PERFORMANCE with FEELING/MENTAL STATE + EQUIPMENT. Protect
+  this connection in the data model and the insights UI; it is the reason to use tennisnow over a notes app.
+- Feeling/mental-state data is personal. Treat it with care; never send it off-device or to analytics
+  without explicit consent.
+- Every screen must show real loading/empty/error/success states with immediate feedback. Optimistic
+  UI for logging.
+
+
+RECURRING MISTAKES TO AVOID
+---------------------------
+- Putting business logic in widgets, or calling the DB from the UI. Always go through a repository interface.
+- Hard-coding colors/sizes/durations instead of using design_system tokens.
+- Creating a one-off component when a reusable one fits — extend the reusable one.
+- Using setState for app/business state instead of Riverpod.
+- Persisting an entity without the id/createdAt/updatedAt/soft-delete invariant.
+- Adding cloud/backend/club/event work "while we're here." It is out of v1 scope.
+
+
+KEY CONSTRAINTS
+---------------
+- Must ship to both Apple App Store and Google Play; keep store privacy declarations accurate.
+- Offline-first: the core loop must work with no network.
+- Clean long-term foundation was explicitly prioritized over a throwaway MVP — invest in the domain
+  model and design system, but stay inside MVP scope.
+- Open product questions (revisit before they block work): exact set of performance stats to capture;
+  precise gamification rules; whether monetization will shape later architecture. Decide deliberately,
+  record significant choices in docs/decisions.md.
+
+
+HOW THIS MEMORY EVOLVES
+-----------------------
+- ADD an entry when a new pitfall is hit, a recurring mistake appears, a durable UX insight is found,
+  or an important constraint emerges.
+- PROMOTE a recurring decision to docs/decisions.md if it is significant or hard to reverse.
+- REMOVE nothing that is still true; correct entries that become wrong. Never let this file fill with
+  short-term noise.
