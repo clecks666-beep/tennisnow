@@ -56,6 +56,7 @@ lib/
     session_logging/  # log a session + history (domain/data/presentation)
     progress/         # aggregate stats, performance trend, insight (read-only)
     gamification/     # daily streak + badges, derived from sessions (read-only)
+    settings/         # device-local personalization (name, default type, etc.)
 ```
 
 Two persistence stores by design: **Drift** for sync-ready domain data (sessions),
@@ -80,9 +81,13 @@ UI talks to repository interfaces, never the database.
 
 - **Onboarding** — a short, skippable first-launch intro that explains the core
   loop and drops the user into the app. Shown once, gated in the router.
+- **Settings** — device-local personalization: a display name (personalizes the
+  greeting), a default session type (so the quick-log starts on your usual mode),
+  replay the intro, and an about/privacy note. Reached via the gear on Sessions.
 
-Navigation is a two-tab bottom bar (Sessions / Progress) with an always-present
-"Log session" action.
+Navigation is a two-tab bottom bar (Sessions / Progress), a "Log session" action,
+and a Settings screen.
 
-Next up (not yet built): equipment as a structured entity, settings/theme.
+Next up (not yet built): equipment as a structured entity, dark mode
+(needs a design-token theming refactor first).
 ```

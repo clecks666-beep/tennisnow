@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/id/id_generator.dart';
 import '../../../../shared/domain/rating.dart';
+import '../../../../shared/domain/session_type.dart';
 import '../../domain/match_result.dart';
-import '../../domain/session_type.dart';
 import '../../domain/tennis_session.dart';
 import 'session_providers.dart';
 

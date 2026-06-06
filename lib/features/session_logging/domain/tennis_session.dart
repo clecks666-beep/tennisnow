@@ -1,6 +1,6 @@
 import '../../../shared/domain/rating.dart';
+import '../../../shared/domain/session_type.dart';
 import 'match_result.dart';
-import 'session_type.dart';
 
 /// A single logged tennis session — the central entity of the core loop.
 ///

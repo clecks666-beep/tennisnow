@@ -155,6 +155,20 @@ PERSISTENCE SPLIT — TWO STORES, DIFFERENT JOBS (since onboarding, ADR-005)
   sharedPreferencesProvider.overrideWithValue in ProviderScope. The router reads prefs SYNCHRONOUSLY
   (that's why prefs load before first frame).
 
+SETTINGS / DEVICE-LOCAL PERSONALIZATION (features/settings)
+-----------------------------------------------------------
+- Settings are device-local prefs (AppPreferences): displayName + defaultSessionType. Exposed
+  reactively via settingsControllerProvider (a Notifier) so the UI (greeting, log-form default)
+  updates live — AppPreferences alone is NOT reactive, always wrap mutable prefs in a Notifier.
+- The log form reads the default session type in initState via ref.read(settingsControllerProvider)
+  — this personalizes the sacred fast-log path without slowing it.
+- SHARED DOMAIN GREW: SessionType moved from session_logging/domain to shared/domain because a 2nd
+  feature (settings) needs it. Rule of thumb (same as the DB promotion): the moment a 2nd feature needs
+  a domain type, promote it to shared/domain rather than cross-importing a feature's internals.
+- DARK MODE IS NOT TRIVIAL HERE: the design system uses static AppColors CONSTANTS, which cannot
+  theme. Real dark mode requires refactoring tokens to theme-aware colors (ColorScheme / Theme.of) and
+  updating every widget that reads AppColors.*. Deliberately postponed — do it as its own change.
+
 ONBOARDING / ROUTER GATE PATTERN
 --------------------------------
 - The router is a PROVIDER (goRouterProvider) so it can read prefs. A redirect gates first-launch:

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/async_value_view.dart';
 import '../../../../design_system/widgets/empty_state.dart';
+import '../../../settings/presentation/providers/settings_controller.dart';
 import '../../domain/tennis_session.dart';
 import '../providers/session_providers.dart';
 import '../widgets/session_list_tile.dart';
@@ -18,11 +19,23 @@ class SessionListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(sessionListProvider);
+    final name = ref.watch(
+      settingsControllerProvider.select((s) => s.displayName),
+    );
 
     // Note: the "Log session" FAB lives in HomeShell so it's available from
     // every tab — it is intentionally not duplicated here.
     return Scaffold(
-      appBar: AppBar(title: const Text('Your sessions')),
+      appBar: AppBar(
+        title: Text(name == null ? 'Your sessions' : '$name\'s sessions'),
+        actions: [
+          IconButton(
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
+      ),
       body: AsyncValueView<List<TennisSession>>(
         value: sessions,
         onRetry: () => ref.invalidate(sessionListProvider),

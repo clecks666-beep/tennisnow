@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 
 import '../../../shared/domain/rating.dart';
+import '../../../shared/domain/session_type.dart';
 import '../domain/match_result.dart';
-import '../domain/session_type.dart';
 import '../domain/tennis_session.dart';
 import '../../../shared/data/app_database.dart';
 

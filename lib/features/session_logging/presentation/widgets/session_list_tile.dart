@@ -4,8 +4,8 @@ import '../../../../core/utils/date_format.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_text_styles.dart';
+import '../../../../shared/domain/session_type.dart';
 import '../../domain/match_result.dart';
-import '../../domain/session_type.dart';
 import '../../domain/tennis_session.dart';
 
 /// One row in the history list. Surfaces the session at a glance: type, when,

@@ -4,6 +4,13 @@ class AppConstants {
 
   static const String appName = 'tennisnow';
 
+  /// User-facing version label (keep in sync with pubspec `version`).
+  static const String appVersion = '0.1.0';
+
+  /// One-line product description shown in Settings/About.
+  static const String tagline =
+      'Your personal tennis companion — log fast, see what lifts your game.';
+
   /// Local Drift database file name.
   static const String databaseName = 'tennisnow_db';
 

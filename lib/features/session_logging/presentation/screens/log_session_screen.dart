@@ -8,8 +8,9 @@ import '../../../../design_system/widgets/primary_button.dart';
 import '../../../../design_system/widgets/rating_selector.dart';
 import '../../../../design_system/widgets/section_label.dart';
 import '../../../../design_system/widgets/selectable_chip_group.dart';
+import '../../../../shared/domain/session_type.dart';
+import '../../../settings/presentation/providers/settings_controller.dart';
 import '../../domain/match_result.dart';
-import '../../domain/session_type.dart';
 import '../providers/log_session_controller.dart';
 
 /// The quick-log form — the sacred core flow (do-not-break rule #1).
@@ -26,7 +27,7 @@ class LogSessionScreen extends ConsumerStatefulWidget {
 }
 
 class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
-  SessionType _type = SessionType.training;
+  late SessionType _type;
   MatchResult? _result;
   int? _durationMinutes;
   int? _performance;
@@ -35,6 +36,13 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
   final TextEditingController _equipmentController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Start on the user's preferred default (Settings), keeping logging fast.
+    _type = ref.read(settingsControllerProvider).defaultSessionType;
+  }
 
   @override
   void dispose() {
