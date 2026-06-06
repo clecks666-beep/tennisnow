@@ -1,6 +1,6 @@
 import '../domain/session_repository.dart';
 import '../domain/tennis_session.dart';
-import 'app_database.dart';
+import '../../../shared/data/app_database.dart';
 import 'session_mapper.dart';
 
 /// Drift-backed implementation of [SessionRepository]. This is the only place

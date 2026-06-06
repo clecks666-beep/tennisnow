@@ -4,7 +4,7 @@ import '../../../shared/domain/rating.dart';
 import '../domain/match_result.dart';
 import '../domain/session_type.dart';
 import '../domain/tennis_session.dart';
-import 'app_database.dart';
+import '../../../shared/data/app_database.dart';
 
 /// Translates between the Drift row (`Session`) and the domain entity
 /// (`TennisSession`). Keeps persistence types out of the domain (CLAUDE.md §2).

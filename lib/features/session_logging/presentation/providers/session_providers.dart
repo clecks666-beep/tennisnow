@@ -1,17 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/app_database.dart';
+import '../../../../shared/data/database_provider.dart';
 import '../../data/drift_session_repository.dart';
 import '../../domain/session_repository.dart';
 import '../../domain/tennis_session.dart';
-
-/// Owns the single AppDatabase instance for the app lifetime. Disposed with the
-/// provider scope. Created once here — never opened ad-hoc elsewhere.
-final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase();
-  ref.onDispose(db.close);
-  return db;
-});
 
 /// Exposes the repository via its domain interface, so the UI never sees Drift
 /// (CLAUDE.md §2). Swap this override to change the backing store.

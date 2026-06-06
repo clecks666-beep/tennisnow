@@ -36,7 +36,7 @@
 **Structure — feature-first + clean layering:**
 ```
 lib/
-  app/            # app shell, router, theme wiring, bootstrap
+  app/            # app shell (HomeShell bottom-nav), router, theme wiring, bootstrap
   core/           # cross-cutting: errors, result types, utils, constants, extensions
   design_system/  # tokens (color/spacing/typography), reusable widgets, theme — THE single visual source of truth
   features/
@@ -44,8 +44,12 @@ lib/
       domain/         # entities, value objects, repository INTERFACES, pure logic (no Flutter, no I/O)
       data/           # repository implementations, datasources, DB models + mappers
       presentation/   # screens, widgets, Riverpod controllers/providers
-  shared/         # domain shared across features (e.g. Feeling, Equipment value objects)
+  shared/
+    domain/       # domain shared across features (e.g. the Rating value object)
+    data/         # shared persistence infra: the app database + its provider (used by multiple features)
 ```
+
+**Cross-feature rule:** features must not import another feature's internals. Anything two features both need (e.g. the database) lives in `shared/`. Navigation tabs are branches of the `StatefulShellRoute` in `app/router.dart`; full-screen flows (e.g. logging) are top-level routes pushed above the shell.
 
 **Dependency rule (do not break):** `presentation → domain ← data`. Domain depends on NOTHING (no Flutter, no DB, no packages-with-side-effects). Dependencies point inward only. UI never touches the database directly — always through a repository interface.
 

@@ -1,0 +1,147 @@
+import 'package:drift/drift.dart';
+import 'package:drift_flutter/drift_flutter.dart';
+
+import '../../core/constants/app_constants.dart';
+
+part 'app_database.g.dart';
+
+/// The single, app-wide local database. Lives in shared/data because more than
+/// one feature reads from it (session_logging writes; progress reads aggregates)
+/// — keeping it here avoids a feature depending on another feature's internals
+/// (CLAUDE.md §2).
+///
+/// Drift table for sessions. Column set follows the sync-ready invariant
+/// (id/createdAt/updatedAt/deletedAt) from do-not-break rule #3. Enums and value
+/// objects are stored primitively; mapping to/from domain happens in mappers so
+/// the domain stays pure.
+class Sessions extends Table {
+  TextColumn get id => text()();
+  TextColumn get type => text()();
+  DateTimeColumn get playedAt => dateTime()();
+  TextColumn get result => text().nullable()();
+  IntColumn get durationMinutes => integer().nullable()();
+  IntColumn get performance => integer().nullable()();
+  IntColumn get mood => integer().nullable()();
+  IntColumn get energy => integer().nullable()();
+  TextColumn get equipment => text().nullable()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Plain data-layer carrier for aggregate results. Kept out of the domain so the
+/// shared DB never imports a feature's domain types; repositories map it across.
+class SessionAggregates {
+  final int total;
+  final int matchCount;
+  final int ratedMatchCount;
+  final int winCount;
+  final double? avgPerformance;
+  final double? avgMood;
+  final double? avgEnergy;
+
+  const SessionAggregates({
+    required this.total,
+    required this.matchCount,
+    required this.ratedMatchCount,
+    required this.winCount,
+    required this.avgPerformance,
+    required this.avgMood,
+    required this.avgEnergy,
+  });
+}
+
+@DriftDatabase(tables: [Sessions])
+class AppDatabase extends _$AppDatabase {
+  AppDatabase() : super(_openConnection());
+
+  /// Allows tests to inject an in-memory executor.
+  AppDatabase.forTesting(super.executor);
+
+  @override
+  int get schemaVersion => 1;
+
+  // ---- session_logging reads/writes ----
+
+  /// Reactive query: non-deleted sessions, newest first. Filtering of
+  /// soft-deleted rows happens in SQL, not in Dart (CLAUDE.md §6).
+  Stream<List<Session>> watchActiveSessions() {
+    return (select(sessions)
+          ..where((t) => t.deletedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.desc(t.playedAt)]))
+        .watch();
+  }
+
+  Future<void> upsertSession(SessionsCompanion entry) {
+    return into(sessions).insertOnConflictUpdate(entry);
+  }
+
+  Future<void> setDeletedAt(String id, DateTime? deletedAt, DateTime updatedAt) {
+    return (update(sessions)..where((t) => t.id.equals(id))).write(
+      SessionsCompanion(
+        deletedAt: Value(deletedAt),
+        updatedAt: Value(updatedAt),
+      ),
+    );
+  }
+
+  // ---- progress reads (aggregation pushed into SQL, CLAUDE.md §6) ----
+
+  /// One-row reactive aggregate over all non-deleted sessions. Uses filtered
+  /// counts and averages so the whole stat block is a single, cheap query.
+  Stream<SessionAggregates> watchSessionAggregates() {
+    final total = sessions.id.count();
+    final matchCount =
+        sessions.id.count(filter: sessions.type.equals('match'));
+    final ratedMatchCount =
+        sessions.id.count(filter: sessions.result.isNotNull());
+    final winCount = sessions.id.count(filter: sessions.result.equals('win'));
+    final avgPerformance = sessions.performance.avg();
+    final avgMood = sessions.mood.avg();
+    final avgEnergy = sessions.energy.avg();
+
+    final query = selectOnly(sessions)
+      ..addColumns([
+        total,
+        matchCount,
+        ratedMatchCount,
+        winCount,
+        avgPerformance,
+        avgMood,
+        avgEnergy,
+      ])
+      ..where(sessions.deletedAt.isNull());
+
+    return query.watchSingle().map(
+          (row) => SessionAggregates(
+            total: row.read(total) ?? 0,
+            matchCount: row.read(matchCount) ?? 0,
+            ratedMatchCount: row.read(ratedMatchCount) ?? 0,
+            winCount: row.read(winCount) ?? 0,
+            avgPerformance: row.read(avgPerformance),
+            avgMood: row.read(avgMood),
+            avgEnergy: row.read(avgEnergy),
+          ),
+        );
+  }
+
+  /// Most recent sessions that have a performance rating, newest first.
+  /// Bounded by [limit] so this never scans the full history (CLAUDE.md §6).
+  Stream<List<Session>> watchRecentRatedSessions({required int limit}) {
+    return (select(sessions)
+          ..where((t) => t.deletedAt.isNull() & t.performance.isNotNull())
+          ..orderBy([(t) => OrderingTerm.desc(t.playedAt)])
+          ..limit(limit))
+        .watch();
+  }
+}
+
+QueryExecutor _openConnection() {
+  // drift_flutter resolves a platform-appropriate on-device path and opens
+  // SQLite. Local-first, offline by default (CLAUDE.md §6, ADR-001).
+  return driftDatabase(name: AppConstants.databaseName);
+}

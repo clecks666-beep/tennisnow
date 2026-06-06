@@ -19,13 +19,10 @@ class SessionListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(sessionListProvider);
 
+    // Note: the "Log session" FAB lives in HomeShell so it's available from
+    // every tab — it is intentionally not duplicated here.
     return Scaffold(
       appBar: AppBar(title: const Text('Your sessions')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/log'),
-        icon: const Icon(Icons.add),
-        label: const Text('Log session'),
-      ),
       body: AsyncValueView<List<TennisSession>>(
         value: sessions,
         onRetry: () => ref.invalidate(sessionListProvider),

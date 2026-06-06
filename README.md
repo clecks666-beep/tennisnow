@@ -45,15 +45,15 @@ flutter analyze
 
 ```
 lib/
-  app/            # app shell + router
+  app/            # app shell (bottom-nav) + router
   core/           # constants, id generation, utils
   design_system/  # tokens + reusable widgets (the single visual source of truth)
-  shared/domain/  # cross-feature value objects (e.g. Rating)
+  shared/
+    domain/       # cross-feature value objects (e.g. Rating)
+    data/         # shared app database + provider (used by multiple features)
   features/
-    session_logging/
-      domain/         # entities, enums, repository interface (pure Dart)
-      data/           # Drift database, mapper, repository implementation
-      presentation/   # screens, widgets, Riverpod providers/controllers
+    session_logging/  # log a session + history (domain/data/presentation)
+    progress/         # aggregate stats, performance trend, insight (read-only)
 ```
 
 Dependency rule: `presentation → domain ← data`. The domain layer is pure; the
@@ -65,6 +65,12 @@ UI talks to repository interfaces, never the database.
   performance/mood/energy, equipment, notes) with smart defaults.
 - **Session history** — live list with motivating empty, loading and error
   states, plus swipe-to-delete with undo (soft-delete).
+- **Progress** — aggregate stats (sessions, win rate, average
+  performance/mood/energy), a performance trend sparkline, and a motivating
+  insight headline. All aggregation runs in SQL; the view is read-only.
 
-Next up (not yet built): progress/trends, lightweight gamification, onboarding.
+Navigation is a two-tab bottom bar (Sessions / Progress) with an always-present
+"Log session" action.
+
+Next up (not yet built): lightweight gamification (streaks/badges), onboarding.
 ```

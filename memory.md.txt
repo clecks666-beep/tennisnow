@@ -107,6 +107,31 @@ CODEGEN & ENVIRONMENT NOTES (easy to trip on)
 - Flutter version floor is 3.22. Use withOpacity (NOT withValues — newer API) and CardTheme (not
   CardThemeData) to stay compatible with the floor. Re-check if the floor is raised.
 
+ESTABLISHED REUSABLE PATTERNS — PROGRESS / DASHBOARDS (first built in features/progress)
+---------------------------------------------------------------------------------------
+- SHARED DATABASE lives in lib/shared/data/app_database.dart with its provider in
+  database_provider.dart (appDatabaseProvider). Features must NOT import another feature's
+  internals — anything shared (the DB) lives in shared/. session_logging writes; progress reads.
+- SQL AGGREGATION pattern: do COUNT/AVG/filtered-counts in Drift via selectOnly + addColumns +
+  watchSingle (see watchSessionAggregates). The DB returns a plain data carrier (SessionAggregates);
+  the repository maps it to the domain (SessionStats). Never aggregate full tables in Dart.
+- DESIGN SYSTEM additions: StatCard (metric card, renders "—" when value null) and MiniLineChart
+  (dependency-free CustomPainter sparkline, clamps to 1..5). Reuse these for any summary/trend UI.
+- PURE INSIGHT LOGIC: textual insights derive from stats via a pure function (ProgressInsight.headline)
+  in the domain — trivially testable, no UI. Keep tone motivating but honest (state only what data shows).
+- NAVIGATION SHELL: app/home_shell.dart + StatefulShellRoute.indexedStack give persistent tabs
+  (Sessions, Progress) with preserved state. The "Log" FAB lives in the shell (reachable from every
+  tab) — do NOT duplicate it inside tab screens. Add a tab = add a StatefulShellBranch.
+
+DRIFT GOTCHAS (learned)
+-----------------------
+- Default SQL column names are snake_case of the Dart getter (playedAt -> played_at). Prefer the
+  type-safe expression API (sessions.performance.avg(), .count(filter: ...)) over raw SQL strings to
+  stay refactor-safe.
+- Storing DateTime: Drift stores it as a Unix timestamp; avoid hand-rolled epoch comparisons in raw
+  SQL. "This week"/streak windows were intentionally deferred to the gamification feature to dodge
+  this coupling. Revisit deliberately when building streaks.
+
 UX PATTERNS THAT MUST STAY (session logging)
 --------------------------------------------
 - The log form defaults to type=Training and playedAt=now, so Save works in one tap (<30s). Every
