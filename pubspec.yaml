@@ -24,6 +24,9 @@ dependencies:
   # Client-generated UUIDs for the sync-ready invariant.
   uuid: ^4.4.0
 
+  # Device-local UI preferences (NOT synced) — e.g. onboarding-seen flag.
+  shared_preferences: ^2.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

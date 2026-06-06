@@ -46,7 +46,7 @@ lib/
       presentation/   # screens, widgets, Riverpod controllers/providers
   shared/
     domain/       # domain shared across features (e.g. the Rating value object)
-    data/         # shared persistence infra: the app database + its provider (used by multiple features)
+    data/         # shared infra: the app database (Drift, synced domain data) + device-local prefs (shared_preferences, NOT synced)
 ```
 
 **Cross-feature rule:** a feature must not import another feature's **internals** (its `data/` or `domain/`). Shared data/domain lives in `shared/`. A feature **may** compose another feature's **public presentation surface** — an exported widget or Riverpod provider (e.g. Progress embeds gamification's `GamificationStrip`). Keep such public widgets self-contained. Navigation tabs are branches of the `StatefulShellRoute` in `app/router.dart`; full-screen/detail flows (logging, achievements) are top-level routes pushed above the shell.

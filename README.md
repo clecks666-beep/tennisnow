@@ -52,10 +52,15 @@ lib/
     domain/       # cross-feature value objects (e.g. Rating)
     data/         # shared app database + provider (used by multiple features)
   features/
+    onboarding/       # first-launch intro (shown once, gated in the router)
     session_logging/  # log a session + history (domain/data/presentation)
     progress/         # aggregate stats, performance trend, insight (read-only)
     gamification/     # daily streak + badges, derived from sessions (read-only)
 ```
+
+Two persistence stores by design: **Drift** for sync-ready domain data (sessions),
+and **shared_preferences** for device-local UI flags that must not sync (e.g.
+onboarding-seen) — see ADR-005.
 
 Dependency rule: `presentation → domain ← data`. The domain layer is pure; the
 UI talks to repository interfaces, never the database.
@@ -73,8 +78,11 @@ UI talks to repository interfaces, never the database.
   set of badges with earned/locked + progress, surfaced atop Progress and in a
   full Achievements screen. Fully derived from sessions — no extra storage.
 
+- **Onboarding** — a short, skippable first-launch intro that explains the core
+  loop and drops the user into the app. Shown once, gated in the router.
+
 Navigation is a two-tab bottom bar (Sessions / Progress) with an always-present
 "Log session" action.
 
-Next up (not yet built): onboarding, equipment as a structured entity.
+Next up (not yet built): equipment as a structured entity, settings/theme.
 ```

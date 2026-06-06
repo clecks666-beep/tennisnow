@@ -1,28 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/gamification/presentation/screens/achievements_screen.dart';
+import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/progress/presentation/screens/progress_screen.dart';
 import '../features/session_logging/presentation/screens/log_session_screen.dart';
 import '../features/session_logging/presentation/screens/session_list_screen.dart';
+import '../shared/data/app_preferences.dart';
 import 'home_shell.dart';
 
-/// Central navigation config (CLAUDE.md §2).
+final _rootKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
+/// Central navigation config (CLAUDE.md §2), exposed as a provider so it can
+/// read device-local preferences for the onboarding gate.
 ///
 /// A StatefulShellRoute hosts the two persistent tabs (Sessions, Progress)
-/// inside [HomeShell]. The log flow is a top-level route pushed ABOVE the shell
-/// so it presents full-screen over whichever tab is active. New tabbed features
-/// add a branch; new full-screen flows add a top-level route.
-class AppRouter {
-  AppRouter._();
+/// inside [HomeShell]. Full-screen/detail flows (logging, achievements,
+/// onboarding) are top-level routes above the shell. The `redirect` shows
+/// onboarding once on first launch and never again. New tabbed features add a
+/// branch; new full-screen flows add a top-level route.
+final goRouterProvider = Provider<GoRouter>((ref) {
+  final prefs = ref.watch(appPreferencesProvider);
 
-  static final GlobalKey<NavigatorState> _rootKey =
-      GlobalKey<NavigatorState>(debugLabel: 'root');
-
-  static final GoRouter router = GoRouter(
+  return GoRouter(
     navigatorKey: _rootKey,
     initialLocation: '/sessions',
+    redirect: (context, state) {
+      final onboarded = prefs.onboardingComplete;
+      final atOnboarding = state.matchedLocation == '/onboarding';
+      if (!onboarded && !atOnboarding) return '/onboarding';
+      if (onboarded && atOnboarding) return '/sessions';
+      return null;
+    },
     routes: [
+      GoRoute(
+        path: '/onboarding',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             HomeShell(navigationShell: navigationShell),
@@ -57,4 +73,4 @@ class AppRouter {
       ),
     ],
   );
-}
+});

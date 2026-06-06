@@ -144,6 +144,25 @@ ESTABLISHED REUSABLE PATTERNS — GAMIFICATION (first built in features/gamifica
   render nothing while loading/on error (GamificationStrip uses maybeWhen→shrink) instead of a
   spinner. Only for non-critical, fast, local data — never for a screen's primary content.
 
+PERSISTENCE SPLIT — TWO STORES, DIFFERENT JOBS (since onboarding, ADR-005)
+--------------------------------------------------------------------------
+- DRIFT (lib/shared/data/app_database.dart) = domain data that is sync-ready (sessions). Carries the
+  id/createdAt/updatedAt/soft-delete invariant. Will sync to cloud one day.
+- SHARED_PREFERENCES (lib/shared/data/app_preferences.dart, AppPreferences) = DEVICE-LOCAL UI prefs
+  that must NEVER sync (onboarding-seen; later: theme). Decide store by this question: "should this
+  follow the user to a new device?" Yes -> Drift. No -> AppPreferences.
+- BOOTSTRAP: main() is async — ensureInitialized + load SharedPreferences, then inject via
+  sharedPreferencesProvider.overrideWithValue in ProviderScope. The router reads prefs SYNCHRONOUSLY
+  (that's why prefs load before first frame).
+
+ONBOARDING / ROUTER GATE PATTERN
+--------------------------------
+- The router is a PROVIDER (goRouterProvider) so it can read prefs. A redirect gates first-launch:
+  not-onboarded -> /onboarding; onboarded & at /onboarding -> /sessions. Set the flag BEFORE
+  navigating into the app so the redirect lets you through (no refreshListenable needed).
+- Onboarding is skippable and shown once; it exists to beat the empty-app problem — keep it short and
+  value-first, never a manual.
+
 DRIFT GOTCHAS (learned)
 -----------------------
 - Default SQL column names are snake_case of the Dart getter (playedAt -> played_at). Prefer the

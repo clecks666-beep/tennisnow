@@ -33,3 +33,10 @@ Do not log trivial or easily reversible choices here.
 - **Decision:** Organize by feature, each split into domain/data/presentation. Domain is pure (no Flutter, no I/O). Dependencies point inward; UI talks to repository interfaces, never the DB.
 - **Rationale:** Isolates business rules, enables testing and reuse, and makes future features and a cloud datasource swap-in additions rather than refactors.
 - **Consequences:** More upfront structure than a flat MVP, accepted deliberately. The dependency rule and design-system-as-single-source-of-truth are enforced (see CLAUDE.md §9).
+
+## ADR-005 — Device-local UI preferences via shared_preferences (separate from Drift)
+- **Status:** Accepted (2026-06-06)
+- **Context:** Onboarding needs a "seen" flag. Such flags describe how the app behaves on a specific device and must NOT sync across devices, unlike domain data.
+- **Decision:** Store device-local UI preferences in `shared_preferences` (via `AppPreferences` in `shared/data`), kept entirely separate from the Drift domain database.
+- **Rationale:** Keeps the sync-ready Drift schema for domain data only; avoids a DB migration for a non-domain flag; uses the standard, store-safe mechanism. Per-device UX state should never sync, so this separation is correct by design.
+- **Consequences:** `main()` loads SharedPreferences before first frame and injects it via `sharedPreferencesProvider`. Future device-local settings (e.g. theme) extend `AppPreferences`; anything that must sync stays in Drift.
