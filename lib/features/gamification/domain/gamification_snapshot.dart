@@ -1,3 +1,4 @@
+import '../../../shared/domain/progression/player_level.dart';
 import 'badge.dart';
 import 'streak.dart';
 
@@ -30,15 +31,20 @@ class GamificationInputs {
   }
 }
 
-/// Everything the motivation UI needs in one immutable snapshot.
+/// Everything the motivation UI needs in one immutable snapshot — the seed of
+/// the Player Profile (★ section): level/XP + streak + badges.
 class GamificationSnapshot {
+  final PlayerLevel level;
   final Streak streak;
   final List<Achievement> achievements;
 
   const GamificationSnapshot({
+    required this.level,
     required this.streak,
     required this.achievements,
   });
+
+  int get totalXp => level.totalXp;
 
   int get earnedCount => achievements.where((a) => a.earned).length;
 

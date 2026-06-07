@@ -41,6 +41,8 @@ class _Strip extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _LevelCard(snapshot: snapshot),
+        const SizedBox(height: AppSpacing.md),
         StreakBanner(streak: snapshot.streak),
         const SizedBox(height: AppSpacing.md),
         Row(
@@ -70,6 +72,75 @@ class _Strip extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The player level headline — the start of the Player Profile (★ section):
+/// level + title, XP progress to the next level.
+class _LevelCard extends StatelessWidget {
+  final GamificationSnapshot snapshot;
+
+  const _LevelCard({required this.snapshot});
+
+  @override
+  Widget build(BuildContext context) {
+    final level = snapshot.level;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  height: 44,
+                  width: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                  ),
+                  child: Text(
+                    '${level.level}',
+                    style: AppTextStyles.titleMedium
+                        .copyWith(color: AppColors.textOnPrimary),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Level ${level.level} · ${level.title}',
+                          style: AppTextStyles.titleMedium),
+                      const SizedBox(height: 2),
+                      Text('${level.totalXp} XP total',
+                          style: AppTextStyles.caption),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+              child: LinearProgressIndicator(
+                value: level.progress,
+                minHeight: 6,
+                backgroundColor: AppColors.outline,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '${level.xpToNextLevel} XP to level ${level.level + 1}',
+              style: AppTextStyles.caption,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

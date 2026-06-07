@@ -1,5 +1,7 @@
 import '../../../core/utils/combine_latest.dart';
 import '../../../shared/data/app_database.dart';
+import '../../../shared/domain/progression/player_level.dart';
+import '../../../shared/domain/progression/xp_rules.dart';
 import '../domain/badge_catalog.dart';
 import '../domain/gamification_repository.dart';
 import '../domain/gamification_snapshot.dart';
@@ -32,7 +34,14 @@ class DriftGamificationRepository implements GamificationRepository {
           matches: agg.matchCount,
           wins: agg.winCount,
         );
+        // Deterministic, re-derivable XP/level from cumulative facts (ADR-007).
+        final xp = XpRules.totalXp(
+          sessions: agg.total,
+          matches: agg.matchCount,
+          wins: agg.winCount,
+        );
         return GamificationSnapshot(
+          level: PlayerLevel.forXp(xp),
           streak: streak,
           achievements: BadgeCatalog.evaluate(inputs),
         );

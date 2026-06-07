@@ -181,6 +181,26 @@ ESTABLISHED REUSABLE PATTERNS — GAMIFICATION (first built in features/gamifica
   render nothing while loading/on error (GamificationStrip uses maybeWhen→shrink) instead of a
   spinner. Only for non-critical, fast, local data — never for a screen's primary content.
 
+ESTABLISHED PATTERNS — PROGRESSION & SKILL FOUNDATION (gamification-ready, ADR-007)
+----------------------------------------------------------------------------------
+- SKILL MODEL: lib/shared/domain/skill/ — Skill, SkillCategory, SkillCatalog (canonical taxonomy, ONE
+  source of truth like BadgeCatalog). Pure, Flutter-free. Skill.id is a STABLE, community-facing key —
+  never change it once shipped. matchCraft & equipment are derived categories (not in the taggable
+  catalog). Extending the model = add to SkillCatalog AND the CLAUDE.md ★ taxonomy.
+- PROGRESSION SCORING is PURE + DETERMINISTIC (community-ready): lib/shared/domain/progression/
+  xp_rules.dart (XpRules.totalXp from cumulative facts) + player_level.dart (PlayerLevel.forXp). All
+  balancing numbers live in lib/core/constants/game_balance.dart (XP awards, level curve, titles) —
+  NEVER scatter game constants. Re-derive level from XP; never store an opaque level.
+- XP is from MONOTONIC cumulative facts (sessions, matches, wins) so it only ever goes up. Streak does
+  NOT feed XP (would make XP fluctuate by day). Completeness/skill-work bonuses join later without
+  breaking determinism. Level curve: step(L)=base100 + (L-1)*50.
+- GAMIFICATION SNAPSHOT now carries the Player Profile seed: level (PlayerLevel) + streak + badges.
+  Computed in DriftGamificationRepository from the SAME aggregates it already reads (no migration, no
+  new persistence — derived-not-stored). The GamificationStrip shows a Level/XP card on top.
+- WHY this matters: this is the gamification-ready foundation. New progression features build on these
+  pure modules (testable, server-recomputable) — do NOT invent a parallel scoring system or put scoring
+  in widgets.
+
 PERSISTENCE SPLIT — TWO STORES, DIFFERENT JOBS (since onboarding, ADR-005)
 --------------------------------------------------------------------------
 - DRIFT (lib/shared/data/app_database.dart) = domain data that is sync-ready (sessions). Carries the
