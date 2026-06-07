@@ -53,4 +53,34 @@ class PlayerProfileBuilder {
     final sum = withData.fold<double>(0, (a, c) => a + c.value);
     return sum / withData.length;
   }
+
+  /// The player's strongest category — the highest-rated one among those with
+  /// data, surfaced as their "edge". Null when nothing is rated yet. Ties resolve
+  /// to the first in [radarCategories] order, keeping the result deterministic.
+  static CategoryScore? strongest(List<CategoryScore> categories) {
+    CategoryScore? best;
+    for (final c in categories) {
+      if (!c.hasData) continue;
+      if (best == null || c.value > best.value) best = c;
+    }
+    return best;
+  }
+
+  /// An honest, motivating "work on this next" nudge derived purely from the
+  /// radar shape — never invented. Prefers a not-yet-started category (so the
+  /// profile fills out), otherwise the lowest-rated one. Null only when nothing
+  /// is rated at all (no signal to act on yet). Deterministic on ties.
+  static CategoryScore? focus(List<CategoryScore> categories) {
+    if (!categories.any((c) => c.hasData)) return null;
+    // An untouched category is the clearest, most rewarding next step.
+    for (final c in categories) {
+      if (!c.hasData) return c;
+    }
+    // Everything started: nudge toward the weakest area.
+    CategoryScore? worst;
+    for (final c in categories) {
+      if (worst == null || c.value < worst.value) worst = c;
+    }
+    return worst;
+  }
 }

@@ -233,6 +233,20 @@ PLAYER PROFILE / RADAR + SKILL-WORK XP (features/player_profile)
   count(distinct sessionId) over the active inner-join) — PER SESSION not per rating, so it's honest and
   non-farmable. Default 0 keeps prior XP behavior. DriftGamificationRepository now combineLatest3 (added a
   3rd reactive source); combineLatest3 lives in core/utils next to combineLatest2.
+- GAMIFIED "CHARACTER SHEET" REDESIGN (profile now reads like an RPG sheet, not a flat stats page):
+  order is level+title hero (PlayerLevelCard) -> live streak (StreakBanner) -> radar -> categories ->
+  next badge (NextBadgeCard) -> top skills. The hero is PRIMARY here (not supplementary): it shows a quiet
+  skeleton while gamificationProvider loads (vs the Progress strip which shrinks); the badge band stays
+  supplementary (shrink while loading).
+- EDGE / WORK-ON-NEXT (honest, derived, NOT invented): PlayerProfileBuilder.strongest(cats) = highest
+  category with data; .focus(cats) = an actionable next-step nudge — prefers a not-yet-started category
+  (fills out the radar) else the weakest; null only when nothing is rated. Both pure + tested. UI shows the
+  focus chip ONLY when it differs from the edge (no contradictory "edge X / work on X"). This is the
+  gamified-but-honest pattern: surface guidance straight from the radar shape, never fabricate a target.
+- NextBadgeCard = NEW reusable PUBLIC gamification widget (gamification/presentation/widgets): the closest
+  unearned badge + AppProgressBar + earned count, tappable to /achievements; celebratory "all earned" state.
+  Takes a GamificationSnapshot (public domain). Reuse it anywhere a "next trophy" nudge fits (§5), don't
+  re-roll a one-off badge preview. Category bars + this card both use AppProgressBar (one progress visual).
 
 FELT-MOMENTS — EARNED-PROGRESSION FEEDBACK AFTER SAVE (★/§4/§5)
 --------------------------------------------------------------

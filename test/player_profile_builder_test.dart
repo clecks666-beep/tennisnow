@@ -79,4 +79,67 @@ void main() {
       expect(PlayerProfileBuilder.overall(cats), closeTo(3.0, 1e-9));
     });
   });
+
+  group('PlayerProfileBuilder.strongest', () {
+    test('is null when nothing is rated', () {
+      final cats = PlayerProfileBuilder.categoryScores([]);
+      expect(PlayerProfileBuilder.strongest(cats), isNull);
+    });
+
+    test('picks the highest-rated category among those with data', () {
+      final cats = PlayerProfileBuilder.categoryScores([
+        score('serve', 3), // strokes -> 3.0
+        score('focus', 5), // mental  -> 5.0
+        score('power', 2), // shot quality -> 2.0
+      ]);
+      expect(PlayerProfileBuilder.strongest(cats)!.category,
+          SkillCategory.mental);
+    });
+
+    test('ignores empty categories and never returns a no-data one', () {
+      final cats = PlayerProfileBuilder.categoryScores([score('serve', 4)]);
+      final strongest = PlayerProfileBuilder.strongest(cats)!;
+      expect(strongest.category, SkillCategory.strokes);
+      expect(strongest.hasData, isTrue);
+    });
+  });
+
+  group('PlayerProfileBuilder.focus', () {
+    test('is null when nothing is rated yet (no signal to act on)', () {
+      final cats = PlayerProfileBuilder.categoryScores([]);
+      expect(PlayerProfileBuilder.focus(cats), isNull);
+    });
+
+    test('prefers a not-yet-started category once anything is rated', () {
+      // Only strokes rated -> the first untouched category (shotQuality) is the
+      // clearest next step.
+      final cats = PlayerProfileBuilder.categoryScores([score('serve', 5)]);
+      final focus = PlayerProfileBuilder.focus(cats)!;
+      expect(focus.category, SkillCategory.shotQuality);
+      expect(focus.hasData, isFalse);
+    });
+
+    test('nudges toward the weakest area when all categories are started', () {
+      final cats = PlayerProfileBuilder.categoryScores([
+        score('serve', 5), // strokes
+        score('power', 4), // shot quality
+        score('endurance', 2), // physical -> weakest
+        score('focus', 3), // mental
+      ]);
+      expect(
+          PlayerProfileBuilder.focus(cats)!.category, SkillCategory.physical);
+    });
+
+    test('strongest and focus differ once more than one area has data', () {
+      final cats = PlayerProfileBuilder.categoryScores([
+        score('serve', 5), // strokes
+        score('focus', 2), // mental
+      ]);
+      final strongest = PlayerProfileBuilder.strongest(cats)!;
+      final focus = PlayerProfileBuilder.focus(cats)!;
+      expect(strongest.category, SkillCategory.strokes);
+      // shotQuality & physical are untouched -> focus points at the first one.
+      expect(focus.category, isNot(strongest.category));
+    });
+  });
 }
