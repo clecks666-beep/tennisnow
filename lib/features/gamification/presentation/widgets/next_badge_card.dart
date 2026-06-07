@@ -4,6 +4,7 @@ import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_text_styles.dart';
 import '../../../../design_system/widgets/app_progress_bar.dart';
+import '../../domain/badge.dart';
 import '../../domain/gamification_snapshot.dart';
 import 'badge_visuals.dart';
 
