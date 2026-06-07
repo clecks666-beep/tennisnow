@@ -4,7 +4,7 @@ name: pages
 # Requires the repository to be PUBLIC (free GitHub Pages) — see README.
 on:
   push:
-    branches: ["claude/exciting-volta-hAupn"]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
