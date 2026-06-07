@@ -48,6 +48,14 @@ CRITICAL ARCHITECTURAL DECISIONS (the "why", so they're never re-litigated blind
   zero logging friction). Chosen because logging friction is the #1 product risk and cloud adds
   none of the core value yet. The schema is sync-ready (see invariant below) so cloud accounts +
   multi-device sync can be ADDED later without a rewrite. Do not add a backend prematurely.
+- PLANNED BACKEND = SUPABASE (future, decided, NOT built yet). The database will move to / sync with
+  Supabase (Postgres + auth + row-level security) when cloud accounts arrive. Keep building toward
+  this WITHOUT building it now: persistence stays behind repository INTERFACES (a future
+  SupabaseXRepository is a drop-in next to the DriftXRepository); keep the id/createdAt/updatedAt/
+  soft-delete invariant on every entity (Postgres rows map 1:1); keep all scoring PURE + DETERMINISTIC
+  so the server (or a Supabase edge function) can recompute/verify XP/levels/skills/quests; design a
+  clean future `userId`/owner seam (RLS will key on it). Do NOT add the supabase package, auth, or
+  network calls until we explicitly start that work — premature backend = logging friction (#1 risk).
 - FLUTTER + DART, single codebase. Chosen for store-ready iOS+Android, app-like performance,
   and strong charts/animation ecosystem (trends + motivation are visual). Avoids 2x native cost.
 - RIVERPOD for state, GO_ROUTER for navigation, DRIFT/SQLite for persistence. Drift over a
