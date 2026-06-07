@@ -12,6 +12,7 @@ import '../../../../shared/domain/session_type.dart';
 import '../../../equipment/presentation/widgets/equipment_picker_field.dart';
 import '../../../settings/presentation/providers/settings_controller.dart';
 import '../../domain/match_result.dart';
+import '../../domain/tennis_session.dart';
 import '../providers/log_session_controller.dart';
 
 /// The quick-log form — the sacred core flow (do-not-break rule #1).
@@ -20,8 +21,14 @@ import '../providers/log_session_controller.dart';
 /// Everything except type is optional and never blocks saving (CLAUDE.md §4).
 /// Local form state is ephemeral UI state, so setState is appropriate here
 /// (CLAUDE.md §3 forbids setState only for app/business state).
+///
+/// Doubles as the EDIT form: pass [existing] to prefill and update that session
+/// (its date/time is preserved). Reached from the FAB (new) or by tapping a
+/// history entry (edit).
 class LogSessionScreen extends ConsumerStatefulWidget {
-  const LogSessionScreen({super.key});
+  final TennisSession? existing;
+
+  const LogSessionScreen({super.key, this.existing});
 
   @override
   ConsumerState<LogSessionScreen> createState() => _LogSessionScreenState();
@@ -40,11 +47,26 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
   final TextEditingController _noteController = TextEditingController();
 
+  bool get _isEdit => widget.existing != null;
+
   @override
   void initState() {
     super.initState();
-    // Start on the user's preferred default (Settings), keeping logging fast.
-    _type = ref.read(settingsControllerProvider).defaultSessionType;
+    final existing = widget.existing;
+    if (existing == null) {
+      // New session: start on the user's preferred default (Settings).
+      _type = ref.read(settingsControllerProvider).defaultSessionType;
+    } else {
+      // Editing: prefill every field from the saved session.
+      _type = existing.type;
+      _result = existing.result;
+      _durationMinutes = existing.durationMinutes;
+      _performance = existing.performance?.value;
+      _mood = existing.mood?.value;
+      _energy = existing.energy?.value;
+      _equipmentName = existing.equipment;
+      _noteController.text = existing.note ?? '';
+    }
   }
 
   @override
@@ -69,8 +91,9 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
     // after this screen's own context is gone.
     final messenger = ScaffoldMessenger.of(context);
 
-    final success =
-        await ref.read(logSessionControllerProvider.notifier).save(draft);
+    final success = await ref
+        .read(logSessionControllerProvider.notifier)
+        .save(draft, existing: widget.existing);
     if (!mounted) return;
 
     if (success) {
@@ -78,7 +101,11 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
       context.pop();
       messenger
         ..clearSnackBars()
-        ..showSnackBar(const SnackBar(content: Text('Session logged 🎾')));
+        ..showSnackBar(
+          SnackBar(
+            content: Text(_isEdit ? 'Session updated' : 'Session logged 🎾'),
+          ),
+        );
     } else {
       messenger
         ..clearSnackBars()
@@ -94,7 +121,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
     final isSaving = saveState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Log session')),
+      appBar: AppBar(title: Text(_isEdit ? 'Edit session' : 'Log session')),
       body: SafeArea(
         child: Column(
           children: [
@@ -202,7 +229,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
             Padding(
               padding: const EdgeInsets.all(AppSpacing.screen),
               child: PrimaryButton(
-                label: 'Save session',
+                label: _isEdit ? 'Save changes' : 'Save session',
                 icon: Icons.check,
                 isLoading: isSaving,
                 onPressed: isSaving ? null : _save,

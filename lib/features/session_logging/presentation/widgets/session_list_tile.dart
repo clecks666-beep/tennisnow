@@ -12,15 +12,19 @@ import '../../domain/tennis_session.dart';
 /// result, and the performance/feeling signals that make tennisnow distinctive.
 class SessionListTile extends StatelessWidget {
   final TennisSession session;
+  final VoidCallback? onTap;
 
-  const SessionListTile({super.key, required this.session});
+  const SessionListTile({super.key, required this.session, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
           children: [
             _TypeAvatar(type: session.type),
             const SizedBox(width: AppSpacing.md),
@@ -47,6 +51,7 @@ class SessionListTile extends StatelessWidget {
             ),
             _Signals(session: session),
           ],
+          ),
         ),
       ),
     );

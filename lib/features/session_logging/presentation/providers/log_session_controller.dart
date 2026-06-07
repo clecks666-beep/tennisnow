@@ -31,23 +31,25 @@ class SessionDraft {
   });
 }
 
-/// Handles persisting a new session. AsyncNotifier exposes loading/error/success
-/// so the screen can render a real state for each (do-not-break rule #5).
+/// Handles persisting a session (new or edited). AsyncNotifier exposes
+/// loading/error/success so the screen can render a real state for each
+/// (do-not-break rule #5).
 class LogSessionController extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
 
-  /// Builds a [TennisSession] from the draft and saves it. Returns true on
-  /// success. Result is cleared for training sessions so data stays coherent.
-  Future<bool> save(SessionDraft draft) async {
+  /// Builds a [TennisSession] from the draft and saves it (upsert by id).
+  /// When [existing] is given this is an edit: id, createdAt and playedAt are
+  /// preserved and only updatedAt is bumped. Returns true on success.
+  Future<bool> save(SessionDraft draft, {TennisSession? existing}) async {
     state = const AsyncLoading();
     final repository = ref.read(sessionRepositoryProvider);
     final now = DateTime.now();
 
     final session = TennisSession(
-      id: IdGenerator.newId(),
+      id: existing?.id ?? IdGenerator.newId(),
       type: draft.type,
-      playedAt: now,
+      playedAt: existing?.playedAt ?? now,
       result: draft.type == SessionType.match ? draft.result : null,
       durationMinutes: draft.durationMinutes,
       performance: Rating.tryFrom(draft.performance),
@@ -55,7 +57,7 @@ class LogSessionController extends AsyncNotifier<void> {
       energy: Rating.tryFrom(draft.energy),
       equipment: _trimToNull(draft.equipment),
       note: _trimToNull(draft.note),
-      createdAt: now,
+      createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     );
 

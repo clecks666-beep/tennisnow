@@ -226,6 +226,11 @@ DRIFT GOTCHAS (learned)
 
 UX PATTERNS THAT MUST STAY (session logging)
 --------------------------------------------
+- The log form is BOTH add and edit: tapping a history tile opens it prefilled (passed via go_router
+  `extra`), Save updates via upsert-by-UUID. Edits preserve id/createdAt/playedAt and bump updatedAt;
+  only NEW sessions use the Settings default type + playedAt=now. Editing playedAt is a future nicety.
+  This also surfaces the note (otherwise write-only). Don't add a separate read-only detail screen
+  unless there's a clear need — the edit form already shows every field.
 - The log form defaults to type=Training and playedAt=now, so Save works in one tap (<30s). Every
   other field is optional and must NEVER block saving. Optional chips/ratings clear on re-tap.
 - After save: pop to history + confirmation SnackBar. Capture ScaffoldMessenger BEFORE pop (the

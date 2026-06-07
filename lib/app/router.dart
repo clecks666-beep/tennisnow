@@ -7,6 +7,7 @@ import '../features/equipment/presentation/screens/equipment_screen.dart';
 import '../features/gamification/presentation/screens/achievements_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/progress/presentation/screens/progress_screen.dart';
+import '../features/session_logging/domain/tennis_session.dart';
 import '../features/session_logging/presentation/screens/log_session_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/session_logging/presentation/screens/session_list_screen.dart';
@@ -67,7 +68,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/log',
         parentNavigatorKey: _rootKey, // present above the shell (full screen)
-        builder: (context, state) => const LogSessionScreen(),
+        // `extra` carries a TennisSession when editing an existing entry.
+        builder: (context, state) =>
+            LogSessionScreen(existing: state.extra as TennisSession?),
       ),
       GoRoute(
         path: '/achievements',

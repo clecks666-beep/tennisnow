@@ -104,7 +104,10 @@ class _DismissibleSession extends ConsumerWidget {
             ),
           );
       },
-      child: SessionListTile(session: session),
+      child: SessionListTile(
+        session: session,
+        onTap: () => context.push('/log', extra: session),
+      ),
     );
   }
 

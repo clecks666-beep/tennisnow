@@ -73,7 +73,8 @@ UI talks to repository interfaces, never the database.
 - **Log a session** — the core quick-log flow (type, optional result, duration,
   performance/mood/energy, equipment, notes) with smart defaults.
 - **Session history** — live list with motivating empty, loading and error
-  states, plus swipe-to-delete with undo (soft-delete).
+  states, swipe-to-delete with undo (soft-delete), and tap-to-edit (the log
+  form doubles as an editor and surfaces your notes).
 - **Progress** — aggregate stats (sessions, win rate, average
   performance/mood/energy), a performance trend sparkline, and a motivating
   insight headline. All aggregation runs in SQL; the view is read-only.
