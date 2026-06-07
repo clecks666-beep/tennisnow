@@ -177,6 +177,19 @@ ONBOARDING / ROUTER GATE PATTERN
 - Onboarding is skippable and shown once; it exists to beat the empty-app problem — keep it short and
   value-first, never a manual.
 
+BACKUP / RESTORE (features/backup)
+----------------------------------
+- Local, offline, dependency-free: export = serialize active rows to a versioned JSON envelope
+  ({app:'tennisnow', format:1, sessions:[], equipment:[]}) and COPY to clipboard; restore = paste +
+  parse + upsert. No file plugins (clipboard is the universal cross-platform path that also works on
+  the web build). File download/share is a future enhancement.
+- Backup works at the PERSISTENCE (row) level on the shared AppDatabase, so it depends only on
+  shared/ — never on a feature's domain/data mappers. Bump BackupService.formatVersion if the JSON
+  shape changes.
+- Restore is a MERGE by UUID (insertOnConflictUpdate) → idempotent, never deletes existing data.
+- Privacy: a backup contains personal notes/feelings; only ever created on explicit user action and
+  kept on-device/clipboard (CLAUDE.md §7). Warn the user to store it safely.
+
 DB MIGRATIONS — MANDATORY ON ANY SCHEMA CHANGE (since equipment, ADR-006)
 -------------------------------------------------------------------------
 - There is real on-device data (incl. web testers). NEVER drop/recreate. Bump AppDatabase

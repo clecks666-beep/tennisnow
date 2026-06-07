@@ -207,6 +207,16 @@ class AppDatabase extends _$AppDatabase {
       ),
     );
   }
+
+  // ---- one-shot reads for backup/export ----
+
+  Future<List<Session>> allActiveSessionsOnce() {
+    return (select(sessions)..where((t) => t.deletedAt.isNull())).get();
+  }
+
+  Future<List<EquipmentItem>> allActiveEquipmentOnce() {
+    return (select(equipmentItems)..where((t) => t.deletedAt.isNull())).get();
+  }
 }
 
 QueryExecutor _openConnection() {

@@ -108,6 +108,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
 
           const SizedBox(height: AppSpacing.lg),
+          const SectionLabel('Data'),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.backup_outlined, color: AppColors.primary),
+              title: const Text('Backup & restore'),
+              subtitle: const Text('Export or import your data'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/backup'),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
           const SectionLabel('Help'),
           Card(
             child: ListTile(

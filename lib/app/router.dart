@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/backup/presentation/screens/backup_screen.dart';
 import '../features/equipment/presentation/screens/equipment_screen.dart';
 import '../features/gamification/presentation/screens/achievements_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -82,6 +83,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/equipment',
         parentNavigatorKey: _rootKey, // detail screen above the shell
         builder: (context, state) => const EquipmentScreen(),
+      ),
+      GoRoute(
+        path: '/backup',
+        parentNavigatorKey: _rootKey, // detail screen above the shell
+        builder: (context, state) => const BackupScreen(),
       ),
     ],
   );

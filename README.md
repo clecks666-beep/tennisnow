@@ -58,6 +58,7 @@ lib/
     gamification/     # daily streak + badges, derived from sessions (read-only)
     settings/         # device-local personalization (name, default type, etc.)
     equipment/        # manage gear (rackets/strings/shoes); pick it when logging
+    backup/           # local JSON export/restore (clipboard, no server)
 ```
 
 Two persistence stores by design: **Drift** for sync-ready domain data (sessions),
@@ -88,6 +89,9 @@ UI talks to repository interfaces, never the database.
 - **Equipment** — manage your rackets, strings and shoes (add/edit/archive with
   undo), then pick gear when logging instead of typing it. Sync-ready Drift
   entity; introduced the app's first schema migration (ADR-006).
+- **Backup & restore** — export all your data to a portable JSON backup (copied
+  to the clipboard) and restore it by pasting — fully local, no account. Restore
+  merges by id and never deletes existing data.
 
 Navigation is a two-tab bottom bar (Sessions / Progress), a "Log session" action,
 and a Settings screen.
