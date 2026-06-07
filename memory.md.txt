@@ -226,6 +226,24 @@ PLAYER PROFILE / RADAR + SKILL-WORK XP (features/player_profile)
   non-farmable. Default 0 keeps prior XP behavior. DriftGamificationRepository now combineLatest3 (added a
   3rd reactive source); combineLatest3 lives in core/utils next to combineLatest2.
 
+FELT-MOMENTS — EARNED-PROGRESSION FEEDBACK AFTER SAVE (★/§4/§5)
+--------------------------------------------------------------
+- After logging, the player SEES what they earned (XP, level-up, new badge). Done with ONE tasteful,
+  NON-BLOCKING SnackBar — celebratory & on-brand (primaryDark bg + accent medal) only on a real level-up
+  or freshly unlocked badge; otherwise a quiet "+X XP" confirm. Never a blocking dialog, never spammy
+  (guardrail: meaningful, not noisy). A negative XP delta (e.g. an edit removing a win) shows no "+XP".
+- PURE DIFF: ProgressionDelta.between(before, after) (gamification/domain) — xpGained, level-up, NEWLY
+  earned badges (set-diff of earned ids). before==null -> no gain/celebration (honest fallback). Tested.
+- CROSS-FEATURE REWARD SEAM (important pattern): session_logging must NOT import gamification/domain.
+  So the whole capture+diff+show is wrapped in a PUBLIC gamification presentation object, ProgressionReward
+  (progressionRewardProvider): captureBaseline() on screen open, showEarned(messenger, isEdit) after the
+  write. The log screen only holds this object (public surface) — snapshot types & delta stay inside
+  gamification. Reuse this seam for any feature that needs felt rewards.
+- DETERMINISTIC SNAPSHOTS: baseline + after are one-shot fresh reads via repo.watch().first (each runs a
+  fresh aggregate query, so 'after' reflects the just-written rows). Baseline is captured in initState (no
+  Save-tap latency); showEarned is called AFTER context.pop() and is safe because ProgressionReward depends
+  only on the captured repo + app-level messenger, never on the disposed widget (no ref/context/mounted).
+
 ESTABLISHED PATTERNS — PROGRESSION & SKILL FOUNDATION (gamification-ready, ADR-007)
 ----------------------------------------------------------------------------------
 - SKILL MODEL: lib/shared/domain/skill/ — Skill, SkillCategory, SkillCatalog (canonical taxonomy, ONE

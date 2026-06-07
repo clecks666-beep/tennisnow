@@ -10,6 +10,7 @@ import '../../../../design_system/widgets/section_label.dart';
 import '../../../../design_system/widgets/selectable_chip_group.dart';
 import '../../../../shared/domain/session_type.dart';
 import '../../../equipment/presentation/widgets/equipment_picker_field.dart';
+import '../../../gamification/presentation/providers/progression_reward.dart';
 import '../../../settings/presentation/providers/settings_controller.dart';
 import '../../../skills/presentation/providers/skill_rating_controller.dart';
 import '../../../skills/presentation/widgets/skill_rating_sheet.dart';
@@ -52,11 +53,16 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
   final TextEditingController _noteController = TextEditingController();
 
+  /// Captures the progression baseline so we can show what this save earned
+  /// (XP, level-up, badges) without adding latency to the Save tap.
+  late final ProgressionReward _reward;
+
   bool get _isEdit => widget.existing != null;
 
   @override
   void initState() {
     super.initState();
+    _reward = ref.read(progressionRewardProvider)..captureBaseline();
     final existing = widget.existing;
     if (existing == null) {
       // New session: start on the user's preferred default (Settings).
@@ -126,15 +132,10 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
           .read(skillRatingControllerProvider.notifier)
           .save(saved.id, saved.playedAt, _skillRatings);
       if (!mounted) return;
-      // The history list updates reactively; pop back and confirm (CLAUDE.md §4).
+      // The history list updates reactively; pop back, then surface what was
+      // earned — XP, a level-up or a new badge (CLAUDE.md §4: progression felt).
       context.pop();
-      messenger
-        ..clearSnackBars()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(_isEdit ? 'Session updated' : 'Session logged 🎾'),
-          ),
-        );
+      await _reward.showEarned(messenger, isEdit: _isEdit);
     } else {
       messenger
         ..clearSnackBars()
