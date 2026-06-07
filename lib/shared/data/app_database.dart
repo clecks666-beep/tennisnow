@@ -200,16 +200,6 @@ class AppDatabase extends _$AppDatabase {
         );
   }
 
-  /// All non-deleted sessions (full rows), newest first. Reactive sibling of
-  /// [allActiveSessionsOnce], for features that derive state from the whole set
-  /// (e.g. weekly quests window over playedAt + feeling flags).
-  Stream<List<Session>> watchActiveSessions() {
-    return (select(sessions)
-          ..where((t) => t.deletedAt.isNull())
-          ..orderBy([(t) => OrderingTerm.desc(t.playedAt)]))
-        .watch();
-  }
-
   /// Played-at timestamps of all non-deleted sessions, newest first. Selects a
   /// single column (not whole rows) for the streak calculation, which is
   /// inherently sequential and not expressible in portable SQL.
