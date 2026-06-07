@@ -198,8 +198,33 @@ SKILL CAPTURE (features/skills, ADR-008)
   composing another feature's public provider is allowed; session_logging never imports skills internals.
 - Table SkillRatings -> row SkillRating; domain entity is SkillSelfRating (avoid the generated-class
   clash, same trick as Sessions/TennisSession).
-- TODO (next): XP bonus for working a focus skill (CLAUDE.md ★C) — needs a skill-rating count in the
-  XP aggregate; deferred to keep this iteration contained.
+- SkillScore (the recency-weighted per-skill aggregate) lives in shared/domain/skill/ (NOT skills/domain)
+  — it's part of the cross-cutting Skill Model (★B) and a 2nd feature (player_profile) reads it. Promoted
+  the moment player_profile needed it (same rule as SessionType/AppDatabase). The CALCULATOR stays in
+  skills/domain (it depends on SkillSelfRating, skills-owned).
+
+PLAYER PROFILE / RADAR + SKILL-WORK XP (features/player_profile)
+---------------------------------------------------------------
+- THE CENTREPIECE (★A): a /profile detail screen showing the player's real skills as a radar of the four
+  ratable categories (strokes, shot quality, physical, mental) on top of the level/XP card. matchCraft &
+  equipment are derived, NOT radar axes (mirrors SkillCatalog).
+- PURE AGGREGATION: PlayerProfileBuilder.categoryScores(List<SkillScore>) -> List<CategoryScore>, averaging
+  each category's rated skills (0 + hasData=false when none). Deterministic, tested, no Flutter/I-O — same
+  shared-domain-scoring discipline as XpRules/StreakCalculator. overall() = mean of categories-with-data.
+- RADAR is a dependency-free CustomPainter in design_system (SkillRadarChart + RadarEntry), like
+  MiniLineChart. Reusable DS component, never a one-off (§5). Takes already-computed 0..1 entries; pure UI.
+- LEVEL CARD reuse: extracted PlayerLevelCard (gamification public widget, takes a PlayerLevel) so the
+  Progress strip AND the profile screen share ONE level visual — don't duplicate progression widgets.
+- CROSS-FEATURE COMPOSITION ONLY: player_profile imports gamification's + skills' PUBLIC providers/widgets
+  (gamificationProvider, skillScoresProvider, PlayerLevelCard, SkillsSummary) and shared/domain — never a
+  feature's data/ or domain/ internals. This is the allowed pattern; keep it that way.
+- ENTRY POINTS: the Progress level card is tappable -> /profile, and the "Your skills" header has a "View
+  profile" button. Empty state SELLS the game (log + tag skills), with a CTA to /log.
+- SKILL-WORK XP BONUS (★C, was the deferred TODO): XpRules.totalXp gained skillSessions (+GameBalance
+  .xpPerSkillSession=5 each). Counts DISTINCT skill-tagged active sessions (watchSkillTaggedSessionCount:
+  count(distinct sessionId) over the active inner-join) — PER SESSION not per rating, so it's honest and
+  non-farmable. Default 0 keeps prior XP behavior. DriftGamificationRepository now combineLatest3 (added a
+  3rd reactive source); combineLatest3 lives in core/utils next to combineLatest2.
 
 ESTABLISHED PATTERNS — PROGRESSION & SKILL FOUNDATION (gamification-ready, ADR-007)
 ----------------------------------------------------------------------------------

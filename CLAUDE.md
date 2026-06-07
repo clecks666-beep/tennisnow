@@ -76,7 +76,8 @@ Model it as a small **pure-domain catalog** (one source of truth, like `BadgeCat
 ### E. How EXISTING code aligns (and should evolve)
 - `features/gamification` (streak + badges) is the seed of this system → grows into XP/levels/quests.
 - `features/progress` (stats, trend, performance-by-equipment) → becomes the analytics that feed skill ratings + the Player Profile.
-- `session_logging` → the gameplay input; the optional "skills worked on" capture is **built** (`features/skills`): an optional sheet on the log form persists per-session skill self-ratings (1–5), recency-weighted into per-skill `SkillScore`s shown in Progress ("Your skills") → grows into the Player Profile radar.
+- `session_logging` → the gameplay input; the optional "skills worked on" capture is **built** (`features/skills`): an optional sheet on the log form persists per-session skill self-ratings (1–5), recency-weighted into per-skill `SkillScore`s (in `shared/domain/skill`).
+- `features/player_profile` → the **Player Profile / radar is built**: a `/profile` screen visualising the four ratable skill categories as a radar (`SkillRadarChart`, a reusable design-system painter) on top of the level/XP card, plus a category breakdown and top skills. Category aggregation is a pure `PlayerProfileBuilder`. Composes only gamification's + skills' public surfaces. Tagging skills now also grants an **XP bonus** (`GameBalance.xpPerSkillSession`, counted per skill-tagged session — honest, non-farmable).
 - `equipment` → feeds equipment-synergy skill insight.
 - `settings` → home for profile/personalization; future community/account settings.
 Prefer **derived-not-stored** for progression where feasible (compute from sessions), persisting only what derivation can't reconstruct (e.g. explicit skill self-ratings, unlocked-badge timestamps).

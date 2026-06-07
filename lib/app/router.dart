@@ -6,6 +6,7 @@ import '../features/backup/presentation/screens/backup_screen.dart';
 import '../features/equipment/presentation/screens/equipment_screen.dart';
 import '../features/gamification/presentation/screens/achievements_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
+import '../features/player_profile/presentation/screens/player_profile_screen.dart';
 import '../features/progress/presentation/screens/progress_screen.dart';
 import '../features/session_logging/domain/tennis_session.dart';
 import '../features/session_logging/presentation/screens/log_session_screen.dart';
@@ -76,6 +77,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/achievements',
         parentNavigatorKey: _rootKey, // detail screen above the shell
         builder: (context, state) => const AchievementsScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        parentNavigatorKey: _rootKey, // detail screen above the shell
+        builder: (context, state) => const PlayerProfileScreen(),
       ),
       GoRoute(
         path: '/settings',

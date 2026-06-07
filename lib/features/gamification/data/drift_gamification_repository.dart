@@ -23,10 +23,11 @@ class DriftGamificationRepository implements GamificationRepository {
 
   @override
   Stream<GamificationSnapshot> watch() {
-    return combineLatest2(
+    return combineLatest3(
       _db.watchSessionAggregates(),
       _db.watchActiveSessionDates(),
-      (SessionAggregates agg, List<DateTime> dates) {
+      _db.watchSkillTaggedSessionCount(),
+      (SessionAggregates agg, List<DateTime> dates, int skillSessions) {
         final Streak streak = StreakCalculator.compute(dates, _now());
         final inputs = GamificationInputs(
           totalSessions: agg.total,
@@ -35,10 +36,12 @@ class DriftGamificationRepository implements GamificationRepository {
           wins: agg.winCount,
         );
         // Deterministic, re-derivable XP/level from cumulative facts (ADR-007).
+        // Skill-tagged sessions add an honest bonus for engaging the skill model.
         final xp = XpRules.totalXp(
           sessions: agg.total,
           matches: agg.matchCount,
           wins: agg.winCount,
+          skillSessions: skillSessions,
         );
         return GamificationSnapshot(
           level: PlayerLevel.forXp(xp),

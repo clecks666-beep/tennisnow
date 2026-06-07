@@ -278,6 +278,26 @@ class AppDatabase extends _$AppDatabase {
         .map((rows) => rows.map((r) => r.readTable(skillRatings)).toList());
   }
 
+  /// Count of DISTINCT active sessions that carry at least one active skill
+  /// rating — the input for the skill-work XP bonus (★C). Inner-joins active
+  /// sessions so a soft-deleted session (or its tombstoned ratings) drops out.
+  /// Counting distinct sessions (not ratings) keeps the bonus honest in SQL.
+  Stream<int> watchSkillTaggedSessionCount() {
+    final distinctSessions = skillRatings.sessionId.count(distinct: true);
+    final query = selectOnly(skillRatings).join([
+      innerJoin(
+        sessions,
+        sessions.id.equalsExp(skillRatings.sessionId),
+        useColumns: false,
+      ),
+    ])
+      ..addColumns([distinctSessions])
+      ..where(skillRatings.deletedAt.isNull() & sessions.deletedAt.isNull());
+    return query
+        .watchSingle()
+        .map((row) => row.read(distinctSessions) ?? 0);
+  }
+
   Future<List<SkillRating>> skillRatingsForSession(String sessionId) {
     return (select(skillRatings)
           ..where((t) => t.sessionId.equals(sessionId) & t.deletedAt.isNull()))

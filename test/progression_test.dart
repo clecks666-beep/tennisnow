@@ -19,6 +19,25 @@ void main() {
       expect(XpRules.totalXp(sessions: 5, matches: 3, wins: 1), greaterThan(base));
       expect(XpRules.totalXp(sessions: 5, matches: 2, wins: 2), greaterThan(base));
     });
+
+    test('skill-tagged sessions add a bonus (default 0)', () {
+      final base = XpRules.totalXp(sessions: 5, matches: 2, wins: 1);
+      // 5*10 + 2*5 + 1*5 = 65; +2 skill sessions * 5 = 75
+      expect(
+        XpRules.totalXp(sessions: 5, matches: 2, wins: 1, skillSessions: 2),
+        base + 10,
+      );
+      // Omitting skillSessions must keep prior behavior (no implicit bonus).
+      expect(XpRules.totalXp(sessions: 5, matches: 2, wins: 1), base);
+    });
+
+    test('skill bonus is monotonic too', () {
+      final base = XpRules.totalXp(sessions: 3, matches: 0, wins: 0, skillSessions: 1);
+      expect(
+        XpRules.totalXp(sessions: 3, matches: 0, wins: 0, skillSessions: 2),
+        greaterThan(base),
+      );
+    });
   });
 
   group('PlayerLevel.forXp', () {

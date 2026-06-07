@@ -5,7 +5,7 @@ import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_text_styles.dart';
 import '../../../../shared/domain/skill/skill_catalog.dart';
-import '../../domain/skill_score.dart';
+import '../../../../shared/domain/skill/skill_score.dart';
 import '../providers/skill_rating_providers.dart';
 
 /// Compact "Your skills" view of recency-weighted self-ratings — the payoff of

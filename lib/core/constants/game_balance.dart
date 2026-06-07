@@ -13,6 +13,12 @@ class GameBalance {
   static const int xpPerMatch = 5; // extra for a match (vs training)
   static const int xpPerWin = 5; // extra for a won match
 
+  /// Bonus for a session in which the player tagged the skills they worked on
+  /// (the optional skill capture). Awarded PER SESSION, not per rating, so it
+  /// rewards engaging with the skill model without being farmable by rating many
+  /// skills at once (★C "bonus for working a focus skill"; honest, non-gameable).
+  static const int xpPerSkillSession = 5;
+
   // ---- Level curve ----
   // XP needed to advance FROM level L to L+1 grows linearly:
   //   step(L) = levelBaseStep + (L-1) * levelStepIncrement

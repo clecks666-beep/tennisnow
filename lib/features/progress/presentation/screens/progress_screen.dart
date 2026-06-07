@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
@@ -89,7 +90,16 @@ class _ProgressContent extends ConsumerWidget {
         ),
 
         const SizedBox(height: AppSpacing.lg),
-        Text('Your skills', style: AppTextStyles.titleMedium),
+        Row(
+          children: [
+            Text('Your skills', style: AppTextStyles.titleMedium),
+            const Spacer(),
+            TextButton(
+              onPressed: () => context.push('/profile'),
+              child: const Text('View profile'),
+            ),
+          ],
+        ),
         const SizedBox(height: AppSpacing.sm),
         const SkillsSummary(),
       ],

@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import '../../../core/constants/game_balance.dart';
-import 'skill_score.dart';
+import '../../../shared/domain/skill/skill_score.dart';
 import 'skill_self_rating.dart';
 
 /// Turns raw skill self-ratings into per-skill [SkillScore]s, recency-weighted
