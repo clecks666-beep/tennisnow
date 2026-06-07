@@ -190,11 +190,25 @@ BACKUP / RESTORE (features/backup)
 - Privacy: a backup contains personal notes/feelings; only ever created on explicit user action and
   kept on-device/clipboard (CLAUDE.md §7). Warn the user to store it safely.
 
+EQUIPMENT STRINGING + PERFORMANCE-BY-EQUIPMENT (extends equipment + progress)
+-----------------------------------------------------------------------------
+- Rackets carry optional stringing: stringName, tensionKg (REAL, kg), lastStrungAt. Shown/edited
+  only when type==racket; cleared when type changes away. Tile shows "23 kg · String · strung Nd ago"
+  with a gentle "time to restring?" hint after EquipmentTile.restringHintDays (60).
+- copyWith can't null-out fields; EquipmentController.save builds the entity explicitly with the
+  passed stringing values (so users can clear them).
+- "Performance by equipment" = SQL GROUP BY sessions.equipment with AVG(performance), filtered to
+  rows that have equipment+performance, ordered by avg desc (watchPerformanceByEquipment). Carrier
+  EquipmentPerformanceRow (shared/data) -> domain EquipmentPerformance (progress). It groups by the
+  denormalized session.equipment NAME — so per-historical-stringing analytics would need snapshotting
+  the stringing onto the session (postponed; would also want the equipmentId FK).
+
 DB MIGRATIONS — MANDATORY ON ANY SCHEMA CHANGE (since equipment, ADR-006)
 -------------------------------------------------------------------------
 - There is real on-device data (incl. web testers). NEVER drop/recreate. Bump AppDatabase
-  schemaVersion and add an additive onUpgrade step (MigrationStrategy). v1->v2 created equipment_items.
-- Pattern: onCreate: (m) => m.createAll(); onUpgrade: if (from < N) await m.createTable(newTable);
+  schemaVersion and add an additive onUpgrade step (MigrationStrategy). v1->v2 created equipment_items;
+  v2->v3 added stringing columns via m.addColumn (nullable columns only).
+- Pattern: onCreate: (m) => m.createAll(); onUpgrade: if (from < N) ...createTable/addColumn...;
 - Table-vs-entity naming (avoid the generated-class clash): table EquipmentItems -> row EquipmentItem,
   domain entity Equipment (same trick as Sessions/Session vs TennisSession).
 - Equipment on a session is stored DENORMALIZED as the name string in sessions.equipment (no sessions

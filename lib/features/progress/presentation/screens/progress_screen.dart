@@ -9,6 +9,7 @@ import '../../../../design_system/widgets/empty_state.dart';
 import '../../../../design_system/widgets/mini_line_chart.dart';
 import '../../../../design_system/widgets/stat_card.dart';
 import '../../../gamification/presentation/widgets/gamification_strip.dart';
+import '../../domain/equipment_performance.dart';
 import '../../domain/progress_insight.dart';
 import '../../domain/session_stats.dart';
 import '../../domain/trend_point.dart';
@@ -53,6 +54,7 @@ class _ProgressContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trendAsync = ref.watch(performanceTrendProvider);
+    final equipmentAsync = ref.watch(equipmentPerformanceProvider);
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.screen),
@@ -75,7 +77,71 @@ class _ProgressContent extends ConsumerWidget {
           onRetry: () => ref.invalidate(performanceTrendProvider),
           data: (points) => _TrendSection(points: points),
         ),
+
+        const SizedBox(height: AppSpacing.lg),
+        Text('Performance by equipment', style: AppTextStyles.titleMedium),
+        const SizedBox(height: AppSpacing.sm),
+        AsyncValueView<List<EquipmentPerformance>>(
+          value: equipmentAsync,
+          onRetry: () => ref.invalidate(equipmentPerformanceProvider),
+          data: (items) => _EquipmentPerformanceSection(items: items),
+        ),
       ],
+    );
+  }
+}
+
+/// Average performance per piece of gear — the payoff of logging equipment.
+/// Best-performing first; shows a guiding hint until there's data.
+class _EquipmentPerformanceSection extends StatelessWidget {
+  final List<EquipmentPerformance> items;
+
+  const _EquipmentPerformanceSection({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Text(
+            'Pick your equipment and rate performance when logging to see which '
+            'gear brings out your best tennis.',
+            style: AppTextStyles.caption,
+          ),
+        ),
+      );
+    }
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Column(
+          children: [
+            for (final item in items) _EquipmentPerformanceRow(item: item),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EquipmentPerformanceRow extends StatelessWidget {
+  final EquipmentPerformance item;
+
+  const _EquipmentPerformanceRow({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final sessionLabel = item.sessions == 1 ? 'session' : 'sessions';
+    return ListTile(
+      dense: true,
+      leading: const Icon(Icons.sports_tennis_outlined, color: AppColors.primary),
+      title: Text(item.name, style: AppTextStyles.body),
+      subtitle: Text('${item.sessions} $sessionLabel', style: AppTextStyles.caption),
+      trailing: Text(
+        '${item.avgPerformance.toStringAsFixed(1)} / 5',
+        style: AppTextStyles.label.copyWith(color: AppColors.textPrimary),
+      ),
     );
   }
 }

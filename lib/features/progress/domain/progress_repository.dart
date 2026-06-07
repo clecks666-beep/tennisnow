@@ -1,3 +1,4 @@
+import 'equipment_performance.dart';
 import 'session_stats.dart';
 import 'trend_point.dart';
 
@@ -10,4 +11,7 @@ abstract interface class ProgressRepository {
   /// Live performance trend (oldest → newest) over the most recent rated
   /// sessions, bounded by [limit] so it never scans the full history.
   Stream<List<TrendPoint>> watchPerformanceTrend({int limit});
+
+  /// Live average performance grouped by the equipment used, best first.
+  Stream<List<EquipmentPerformance>> watchPerformanceByEquipment();
 }

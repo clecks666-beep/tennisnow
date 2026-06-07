@@ -1,4 +1,5 @@
 import '../../../shared/data/app_database.dart';
+import '../domain/equipment_performance.dart';
 import '../domain/progress_repository.dart';
 import '../domain/session_stats.dart';
 import '../domain/trend_point.dart';
@@ -35,6 +36,21 @@ class DriftProgressRepository implements ProgressRepository {
                 (r) => TrendPoint(
                   playedAt: r.playedAt,
                   performance: r.performance!,
+                ),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<List<EquipmentPerformance>> watchPerformanceByEquipment() {
+    return _db.watchPerformanceByEquipment().map(
+          (rows) => rows
+              .map(
+                (r) => EquipmentPerformance(
+                  name: r.name,
+                  avgPerformance: r.avgPerformance,
+                  sessions: r.sessions,
                 ),
               )
               .toList(),

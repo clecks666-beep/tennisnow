@@ -41,6 +41,10 @@ class EquipmentItems extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get type => text()();
+  // Stringing details (rackets) — all optional.
+  TextColumn get stringName => text().nullable()();
+  RealColumn get tensionKg => real().nullable()();
+  DateTimeColumn get lastStrungAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -71,6 +75,19 @@ class SessionAggregates {
   });
 }
 
+/// Per-equipment performance aggregate (data-layer carrier).
+class EquipmentPerformanceRow {
+  final String name;
+  final double avgPerformance;
+  final int sessions;
+
+  const EquipmentPerformanceRow({
+    required this.name,
+    required this.avgPerformance,
+    required this.sessions,
+  });
+}
+
 @DriftDatabase(tables: [Sessions, EquipmentItems])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -79,17 +96,22 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// Schema migrations. ANY schema change must bump [schemaVersion] and add an
   /// upgrade step here so existing on-device data is never broken (CLAUDE.md §2,
-  /// ADR-006). v1→v2 adds the equipment table.
+  /// ADR-006). v1→v2 adds the equipment table; v2→v3 adds stringing columns.
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.createTable(equipmentItems);
+          }
+          if (from < 3) {
+            await m.addColumn(equipmentItems, equipmentItems.stringName);
+            await m.addColumn(equipmentItems, equipmentItems.tensionKg);
+            await m.addColumn(equipmentItems, equipmentItems.lastStrungAt);
           }
         },
       );
@@ -216,6 +238,35 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<EquipmentItem>> allActiveEquipmentOnce() {
     return (select(equipmentItems)..where((t) => t.deletedAt.isNull())).get();
+  }
+
+  /// Average performance grouped by the equipment recorded on sessions, best
+  /// first. Grouping/averaging happen in SQL, not Dart (CLAUDE.md §6). Only
+  /// sessions that recorded both equipment and a performance rating count.
+  Stream<List<EquipmentPerformanceRow>> watchPerformanceByEquipment() {
+    final name = sessions.equipment;
+    final avg = sessions.performance.avg();
+    final count = sessions.id.count();
+
+    final query = selectOnly(sessions)
+      ..addColumns([name, avg, count])
+      ..where(sessions.deletedAt.isNull() &
+          sessions.equipment.isNotNull() &
+          sessions.performance.isNotNull())
+      ..groupBy([sessions.equipment])
+      ..orderBy([OrderingTerm(expression: avg, mode: OrderingMode.desc)]);
+
+    return query.watch().map(
+          (rows) => rows
+              .map(
+                (r) => EquipmentPerformanceRow(
+                  name: r.read(name)!,
+                  avgPerformance: r.read(avg)!,
+                  sessions: r.read(count) ?? 0,
+                ),
+              )
+              .toList(),
+        );
   }
 }
 

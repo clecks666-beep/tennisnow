@@ -87,8 +87,12 @@ UI talks to repository interfaces, never the database.
   greeting), a default session type (so the quick-log starts on your usual mode),
   replay the intro, and an about/privacy note. Reached via the gear on Sessions.
 - **Equipment** — manage your rackets, strings and shoes (add/edit/archive with
-  undo), then pick gear when logging instead of typing it. Sync-ready Drift
-  entity; introduced the app's first schema migration (ADR-006).
+  undo), then pick gear when logging instead of typing it. Rackets track their
+  **stringing** (string, tension in kg, last-strung date with a restring hint).
+  Sync-ready Drift entity; introduced the app's schema migrations (ADR-006).
+- **Performance by equipment** — the Progress tab groups your average
+  performance per piece of gear (best first), so you can see which racket/setup
+  brings out your best tennis.
 - **Backup & restore** — export all your data to a portable JSON backup (copied
   to the clipboard) and restore it by pasting — fully local, no account. Restore
   merges by id and never deletes existing data.

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/data/database_provider.dart';
 import '../../data/drift_progress_repository.dart';
+import '../../domain/equipment_performance.dart';
 import '../../domain/progress_repository.dart';
 import '../../domain/session_stats.dart';
 import '../../domain/trend_point.dart';
@@ -25,4 +26,10 @@ final performanceTrendProvider = StreamProvider<List<TrendPoint>>((ref) {
   return ref
       .watch(progressRepositoryProvider)
       .watchPerformanceTrend(limit: kTrendLength);
+});
+
+/// Live average performance grouped by equipment, best first.
+final equipmentPerformanceProvider =
+    StreamProvider<List<EquipmentPerformance>>((ref) {
+  return ref.watch(progressRepositoryProvider).watchPerformanceByEquipment();
 });

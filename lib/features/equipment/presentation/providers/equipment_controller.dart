@@ -15,24 +15,30 @@ class EquipmentController extends AsyncNotifier<void> {
 
   /// Creates a new equipment ([existing] null) or updates an existing one.
   /// Returns true on success. Name is trimmed; callers validate non-empty.
+  /// Stringing fields are passed explicitly (and may be null to clear them),
+  /// which is why we build the entity directly instead of copyWith.
   Future<bool> save({
     Equipment? existing,
     required String name,
     required EquipmentType type,
+    String? stringName,
+    double? tensionKg,
+    DateTime? lastStrungAt,
   }) async {
     state = const AsyncLoading();
     final repository = ref.read(equipmentRepositoryProvider);
     final now = DateTime.now();
 
-    final equipment = existing == null
-        ? Equipment(
-            id: IdGenerator.newId(),
-            name: name.trim(),
-            type: type,
-            createdAt: now,
-            updatedAt: now,
-          )
-        : existing.copyWith(name: name.trim(), type: type, updatedAt: now);
+    final equipment = Equipment(
+      id: existing?.id ?? IdGenerator.newId(),
+      name: name.trim(),
+      type: type,
+      stringName: stringName,
+      tensionKg: tensionKg,
+      lastStrungAt: lastStrungAt,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    );
 
     state = await AsyncValue.guard(() => repository.save(equipment));
     return !state.hasError;
