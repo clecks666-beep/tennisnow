@@ -32,6 +32,16 @@ jobs:
       - run: flutter create . --platforms=web --project-name tennisnow
       - run: flutter pub get
       - run: dart run build_runner build --delete-conflicting-outputs
+      # Drift needs sqlite3 (WASM) + its worker to run on the web. flutter create
+      # does not provide these, so fetch them into web/ before the build (they're
+      # forwards-compatible with drift ^2.18). Without them the database can't
+      # open and the app can't save or load sessions.
+      - name: Add drift web assets (sqlite3.wasm + worker)
+        run: |
+          curl -fSL -o web/sqlite3.wasm \
+            https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-2.4.6/sqlite3.wasm
+          curl -fSL -o web/drift_worker.js \
+            https://github.com/simolus3/drift/releases/download/drift-2.18.0/drift_worker.js
       - run: flutter build web --release --base-href /tennisnow/
       - uses: actions/configure-pages@v5
         with:

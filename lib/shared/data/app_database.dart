@@ -357,5 +357,18 @@ class AppDatabase extends _$AppDatabase {
 QueryExecutor _openConnection() {
   // drift_flutter resolves a platform-appropriate on-device path and opens
   // SQLite. Local-first, offline by default (CLAUDE.md §6, ADR-001).
-  return driftDatabase(name: AppConstants.databaseName);
+  //
+  // On web there is no native SQLite, so drift runs sqlite3 compiled to
+  // WebAssembly inside a worker. Those two assets (`sqlite3.wasm`,
+  // `drift_worker.js`) must be served from the web root — the CI `pages`
+  // workflow downloads them into web/ before `flutter build web`. We pass the
+  // URIs explicitly so web behaviour is deterministic and never silently
+  // falls back to a broken in-memory database. Ignored on iOS/Android.
+  return driftDatabase(
+    name: AppConstants.databaseName,
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+      driftWorker: Uri.parse('drift_worker.js'),
+    ),
+  );
 }
