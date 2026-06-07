@@ -6,11 +6,14 @@ import 'package:flutter/material.dart';
 /// assets/images/brand/badges/.
 String? badgeAssetFor(String badgeId) {
   const assets = <String, String>{
-    'first_session': 'assets/images/brand/badges/badge_first_session.png',
-    'ten_sessions': 'assets/images/brand/badges/badge_ten_sessions.png',
-    'streak_3': 'assets/images/brand/badges/badge_streak_3.png',
-    'streak_7': 'assets/images/brand/badges/badge_streak_7.png',
-    'first_win': 'assets/images/brand/badges/badge_first_win.png',
+    'first_session':  'assets/images/brand/badges/badge_first_session.png',
+    'ten_sessions':   'assets/images/brand/badges/badge_ten_sessions.png',
+    'fifty_sessions': 'assets/images/brand/badges/badge_fifty_sessions.png',
+    'streak_3':       'assets/images/brand/badges/badge_streak_3.png',
+    'streak_7':       'assets/images/brand/badges/badge_streak_7.png',
+    'first_win':      'assets/images/brand/badges/badge_first_win.png',
+    'ten_matches':    'assets/images/brand/badges/badge_ten_matches.png',
+    'ten_wins':       'assets/images/brand/badges/badge_ten_wins.png',
   };
   return assets[badgeId];
 }
