@@ -67,9 +67,13 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           await ref.read(backupServiceProvider).import(_importController.text);
       if (!mounted) return;
       _importController.clear();
-      // Sessions/equipment lists update reactively via their streams.
-      _snack('Restored ${result.sessions} sessions and '
-          '${result.equipment} equipment');
+      // Sessions/equipment/skills update reactively via their streams. Mention
+      // skill ratings only when present, so older (v1) backups stay tidy.
+      final skills = result.skillRatings > 0
+          ? ' and ${result.skillRatings} skill ratings'
+          : '';
+      _snack('Restored ${result.sessions} sessions, '
+          '${result.equipment} equipment$skills');
     } on BackupFormatException catch (e) {
       if (mounted) _snack(e.message);
     } catch (_) {

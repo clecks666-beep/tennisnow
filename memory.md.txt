@@ -343,6 +343,23 @@ DRIFT GOTCHAS (learned)
 - Storing DateTime: Drift stores it as a Unix timestamp; avoid hand-rolled epoch comparisons in raw
   SQL. "This week"/streak windows were intentionally deferred to the gamification feature to dodge
   this coupling. Revisit deliberately when building streaks.
+- WEB needs the sqlite3 WASM runtime: drift has no native SQLite in the browser, so `sqlite3.wasm` +
+  `drift_worker.js` MUST sit in web/ (served from the root). `flutter create` does NOT provide them,
+  so the CI `pages` workflow curls them in before `flutter build web` (forwards-compatible with the
+  drift ^2.18 in pubspec; URLs are the simolus3 drift/sqlite3.dart GitHub releases). `_openConnection`
+  passes the URIs explicitly via DriftWebOptions so web never silently falls back to a broken DB. If
+  the web app "loads but can't save/load sessions", suspect these assets first.
+
+BACKUP/EXPORT MUST COVER EVERY TABLE + COLUMN (learned the hard way)
+-------------------------------------------------------------------
+- BackupService (features/backup) hand-maps each row <-> JSON. It is NOT reflection-based, so adding a
+  table or a column is silently NOT backed up until you extend it. When you touch the schema, also
+  update BackupService: add the column to the *toJson/*fromJson pair, or add a new top-level array +
+  its allActive<X>Once()/upsert<X>() pair on AppDatabase (mirror sessions/equipment exactly).
+- Real bug fixed once: equipment stringing (stringName/tensionKg/lastStrungAt) and the ENTIRE
+  skill_ratings table were missing from export/import -> restore wiped them. Now covered; envelope
+  bumped to format v2. Keep import tolerant of older envelopes (missing arrays -> empty, missing
+  nullable fields -> null) so v1 backups still restore. No schema bump needed for backup-only reads.
 
 UX PATTERNS THAT MUST STAY (session logging)
 --------------------------------------------

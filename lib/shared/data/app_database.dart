@@ -260,6 +260,29 @@ class AppDatabase extends _$AppDatabase {
     return (select(equipmentItems)..where((t) => t.deletedAt.isNull())).get();
   }
 
+  /// Active skill ratings whose session is also active (inner join), for backup.
+  /// Mirrors [watchActiveSkillRatings] but one-shot, so a tombstoned session's
+  /// ratings never leak into an export.
+  Future<List<SkillRating>> allActiveSkillRatingsOnce() {
+    final query = select(skillRatings).join([
+      innerJoin(
+        sessions,
+        sessions.id.equalsExp(skillRatings.sessionId),
+        useColumns: false,
+      ),
+    ])
+      ..where(skillRatings.deletedAt.isNull() & sessions.deletedAt.isNull());
+    return query
+        .get()
+        .then((rows) => rows.map((r) => r.readTable(skillRatings)).toList());
+  }
+
+  /// Merge-by-UUID upsert for restoring a skill rating from a backup. Matches
+  /// the upsert semantics used for sessions/equipment so re-importing is safe.
+  Future<void> upsertSkillRating(SkillRatingsCompanion entry) {
+    return into(skillRatings).insertOnConflictUpdate(entry);
+  }
+
   // ---- skill self-ratings ----
 
   /// Active skill ratings whose session is also active (inner join), so ratings

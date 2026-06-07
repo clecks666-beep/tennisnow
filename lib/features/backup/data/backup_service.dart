@@ -16,7 +16,12 @@ class BackupFormatException implements Exception {
 class BackupImportResult {
   final int sessions;
   final int equipment;
-  const BackupImportResult({required this.sessions, required this.equipment});
+  final int skillRatings;
+  const BackupImportResult({
+    required this.sessions,
+    required this.equipment,
+    required this.skillRatings,
+  });
 }
 
 /// Serializes the local database to a portable JSON backup and restores from it.
@@ -30,13 +35,16 @@ class BackupService {
 
   BackupService(this._db);
 
-  /// Current envelope format. Bump only if the JSON shape changes.
-  static const int formatVersion = 1;
+  /// Current envelope format. v2 adds equipment stringing details and the
+  /// skillRatings array; v1 backups still import fine (missing parts default to
+  /// empty/null). Bump only if the JSON shape changes.
+  static const int formatVersion = 2;
   static const String _appTag = 'tennisnow';
 
   Future<String> export() async {
     final sessions = await _db.allActiveSessionsOnce();
     final equipment = await _db.allActiveEquipmentOnce();
+    final skillRatings = await _db.allActiveSkillRatingsOnce();
 
     final envelope = <String, dynamic>{
       'app': _appTag,
@@ -44,6 +52,7 @@ class BackupService {
       'exportedAt': DateTime.now().toIso8601String(),
       'sessions': sessions.map(_sessionToJson).toList(),
       'equipment': equipment.map(_equipmentToJson).toList(),
+      'skillRatings': skillRatings.map(_skillRatingToJson).toList(),
     };
     return const JsonEncoder.withIndent('  ').convert(envelope);
   }
@@ -62,6 +71,8 @@ class BackupService {
 
     final sessions = (decoded['sessions'] as List?) ?? const [];
     final equipment = (decoded['equipment'] as List?) ?? const [];
+    // Absent in v1 backups — defaults to empty so older exports still import.
+    final skillRatings = (decoded['skillRatings'] as List?) ?? const [];
 
     try {
       for (final s in sessions) {
@@ -70,6 +81,9 @@ class BackupService {
       for (final e in equipment) {
         await _db.upsertEquipment(_equipmentFromJson(e as Map));
       }
+      for (final r in skillRatings) {
+        await _db.upsertSkillRating(_skillRatingFromJson(r as Map));
+      }
     } catch (_) {
       throw const BackupFormatException('This backup is missing some fields.');
     }
@@ -77,6 +91,7 @@ class BackupService {
     return BackupImportResult(
       sessions: sessions.length,
       equipment: equipment.length,
+      skillRatings: skillRatings.length,
     );
   }
 
@@ -117,6 +132,9 @@ class BackupService {
         'id': e.id,
         'name': e.name,
         'type': e.type,
+        'stringName': e.stringName,
+        'tensionKg': e.tensionKg,
+        'lastStrungAt': e.lastStrungAt?.toIso8601String(),
         'createdAt': e.createdAt.toIso8601String(),
         'updatedAt': e.updatedAt.toIso8601String(),
       };
@@ -126,8 +144,38 @@ class BackupService {
         id: Value(j['id'] as String),
         name: Value(j['name'] as String),
         type: Value(j['type'] as String),
+        // Nullable + absent in v1 backups, so read defensively.
+        stringName: Value(j['stringName'] as String?),
+        tensionKg: Value((j['tensionKg'] as num?)?.toDouble()),
+        lastStrungAt: Value(_parseNullableDate(j['lastStrungAt'])),
         createdAt: Value(DateTime.parse(j['createdAt'] as String)),
         updatedAt: Value(DateTime.parse(j['updatedAt'] as String)),
         deletedAt: const Value(null),
       );
+
+  static Map<String, dynamic> _skillRatingToJson(SkillRating r) => {
+        'id': r.id,
+        'sessionId': r.sessionId,
+        'skillId': r.skillId,
+        'value': r.value,
+        'recordedAt': r.recordedAt.toIso8601String(),
+        'createdAt': r.createdAt.toIso8601String(),
+        'updatedAt': r.updatedAt.toIso8601String(),
+      };
+
+  static SkillRatingsCompanion _skillRatingFromJson(Map j) =>
+      SkillRatingsCompanion(
+        id: Value(j['id'] as String),
+        sessionId: Value(j['sessionId'] as String),
+        skillId: Value(j['skillId'] as String),
+        value: Value((j['value'] as num).toInt()),
+        recordedAt: Value(DateTime.parse(j['recordedAt'] as String)),
+        createdAt: Value(DateTime.parse(j['createdAt'] as String)),
+        updatedAt: Value(DateTime.parse(j['updatedAt'] as String)),
+        deletedAt: const Value(null),
+      );
+
+  /// Parses an optional ISO-8601 string; tolerates null/missing values.
+  static DateTime? _parseNullableDate(Object? value) =>
+      value == null ? null : DateTime.parse(value as String);
 }
