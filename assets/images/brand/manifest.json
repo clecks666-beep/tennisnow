@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-06-07T17:07:33Z",
+  "model": "black-forest-labs/flux-schnell",
+  "assets": {
+    "icons/app_icon_primary": {
+      "url": "local",
+      "file": "icons/app_icon_primary.png"
+    },
+    "icons/app_icon_glow": {
+      "url": "https://replicate.delivery/xezq/Dm6e2W5vpRQqNKJKuDS0FquuGgh6yTQqgoSkCF5wXdeWa1sWA/out-0.png",
+      "file": "icons/app_icon_glow.png"
+    },
+    "icons/app_icon_dynamic": {
+      "url": "https://replicate.delivery/xezq/wwgHx9ULdHJcPFiYL8KUh6tUMXSl6XdB4PlM28jHxLgoWNrF/out-0.png",
+      "file": "icons/app_icon_dynamic.png"
+    },
+    "badges/badge_streak_3": {
+      "url": "https://replicate.delivery/xezq/qQIVQVDttm5gPBwTTeSoa11mL94b9r88ZNXAnjFkVMgYtaWLA/out-0.png",
+      "file": "badges/badge_streak_3.png"
+    },
+    "badges/badge_streak_7": {
+      "url": "https://replicate.delivery/xezq/Xr0DRVS3BgJ5GVgdb0oAXNfKO4meoVOtp0U7AF0wt7j9a1sWA/out-0.png",
+      "file": "badges/badge_streak_7.png"
+    },
+    "badges/badge_streak_30": {
+      "url": "https://replicate.delivery/xezq/lc9uL9GXAM4cFputby7QgCJbXlsAayMoIwNhjgvyE9kyWNrF/out-0.png",
+      "file": "badges/badge_streak_30.png"
+    },
+    "badges/badge_serve": {
+      "url": "https://replicate.delivery/xezq/R5rU8xf9fPlIgkBbX3wpz32Ke2KpMHdetSSjUAhx62tZtVzaB/out-0.png",
+      "file": "badges/badge_serve.png"
+    },
+    "badges/badge_forehand": {
+      "url": "https://replicate.delivery/xezq/KPO2lLnp0eWCcaVTcFDlE3rjeoxRBdwfciBiiAPGKlxG3qZtA/out-0.png",
+      "file": "badges/badge_forehand.png"
+    },
+    "badges/badge_backhand": {
+      "url": "https://replicate.delivery/xezq/fgud37LjL2W5ZCxB075iBObhnfEzPAfyJ8dmtfyUhKl8uVzaB/out-0.png",
+      "file": "badges/badge_backhand.png"
+    },
+    "badges/badge_first_session": {
+      "url": "https://replicate.delivery/xezq/oNTZiUgR0j6TBp8hdwOMFDlG9jcBYDlZf3ssOdoLfA98b1sWA/out-0.png",
+      "file": "badges/badge_first_session.png"
+    },
+    "badges/badge_ten_sessions": {
+      "url": "https://replicate.delivery/xezq/kmlGov8Kf9SZTyQufgKAeGBMtC66uLHfDkEPGjTS9vOgwVzaB/out-0.png",
+      "file": "badges/badge_ten_sessions.png"
+    },
+    "badges/badge_first_win": {
+      "url": "https://replicate.delivery/xezq/mFUhT114SqIiI53Ocl5qLQGakEvAekOsDiNgINXV8evVc1sWA/out-0.png",
+      "file": "badges/badge_first_win.png"
+    },
+    "badges/badge_mental_game": {
+      "url": "https://replicate.delivery/xezq/2EKARwfbg0xrfk25pKD28MODPodJ8A93JRPeEWNidBBD5qZtA/out-0.png",
+      "file": "badges/badge_mental_game.png"
+    },
+    "onboarding/onboarding_1_log": {
+      "url": "https://replicate.delivery/xezq/hEfvRpCzGlUvbiH2i006sk8c7hh5nvRyYpvTuVhGO0cXuaWLA/out-0.png",
+      "file": "onboarding/onboarding_1_log.png"
+    },
+    "onboarding/onboarding_2_level_up": {
+      "url": "https://replicate.delivery/xezq/INfgeIFdlyuvDktL0cKSdpCflc05D2Zy9Mam3vBd7PG15qZtA/out-0.png",
+      "file": "onboarding/onboarding_2_level_up.png"
+    },
+    "onboarding/onboarding_3_motivation": {
+      "url": "https://replicate.delivery/xezq/YQnnhdWeIl0f8EpXa7JJScMOJS9TZyeli1PiJJneoVGeorm1C/out-0.png",
+      "file": "onboarding/onboarding_3_motivation.png"
+    },
+    "empty_states/empty_player_profile": {
+      "url": "https://replicate.delivery/xezq/y08hEAy1GNKeD6bntQDQTi00H9nY5et1ZMCsFF7SHhtUd1sWA/out-0.png",
+      "file": "empty_states/empty_player_profile.png"
+    }
+  },
+  "failed": []
+}
