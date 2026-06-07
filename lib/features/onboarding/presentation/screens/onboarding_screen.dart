@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_text_styles.dart';
+import '../../../../design_system/widgets/app_logo.dart';
 import '../../../../design_system/widgets/primary_button.dart';
 import '../../../../shared/data/app_preferences.dart';
 
@@ -92,11 +93,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _finish,
-                child: const Text('Skip'),
+            // Brand presence on the very first screen builds trust and tells
+            // the user what they're in (§10 first impression). The logo is
+            // centred; Skip stays reachable on the right without forcing it.
+            SizedBox(
+              height: 56,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const AppLogo(height: 30),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _finish,
+                      child: const Text('Skip'),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(

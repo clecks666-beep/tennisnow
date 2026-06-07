@@ -56,6 +56,16 @@ CRITICAL ARCHITECTURAL DECISIONS (the "why", so they're never re-litigated blind
   so the server (or a Supabase edge function) can recompute/verify XP/levels/skills/quests; design a
   clean future `userId`/owner seam (RLS will key on it). Do NOT add the supabase package, auth, or
   network calls until we explicitly start that work — premature backend = logging friction (#1 risk).
+- BRAND MARK = CODED VECTOR (design_system/widgets/app_logo.dart): AppLogoMark (tennis-ball CustomPainter,
+  court-green tile + optic-yellow ball + dark-green seam) + AppLogo (mark + "tennisnow" wordmark, "now" in
+  brand green). No raster asset on purpose — scales crisply, theme-aware, §5 single-source-of-truth. Used
+  on onboarding (first impression). Reuse this, don't drop in PNG logos.
+- AI IMAGE ASSETS (Replicate etc.): the on-web session NETWORK POLICY blocks api.replicate.com
+  (x-deny-reason: host_not_allowed). So Claude CANNOT generate/download images from here unless the
+  environment is created with a policy that allowlists api.replicate.com + replicate.delivery, with the
+  token as an env-var/secret (never in chat/repo). Otherwise the path is: user generates externally, we
+  integrate the files. Premium guidance: AI raster is OK for logo / onboarding+empty-state illustrations;
+  NOT for buttons/UI chrome (stay coded Flutter) or animations (use Lottie/Rive or coded TweenAnimation).
 - FLUTTER + DART, single codebase. Chosen for store-ready iOS+Android, app-like performance,
   and strong charts/animation ecosystem (trends + motivation are visual). Avoids 2x native cost.
 - RIVERPOD for state, GO_ROUTER for navigation, DRIFT/SQLite for persistence. Drift over a
