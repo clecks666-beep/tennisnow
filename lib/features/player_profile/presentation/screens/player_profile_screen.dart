@@ -45,7 +45,8 @@ class PlayerProfileScreen extends ConsumerWidget {
         data: (scores) {
           if (scores.isEmpty) {
             return EmptyState(
-              icon: Icons.radar_rounded,
+              imagePath:
+                  'assets/images/brand/empty_states/empty_player_profile.png',
               title: 'Your game starts here',
               message:
                   'Log a session and tag the skills you worked on — your serve, '

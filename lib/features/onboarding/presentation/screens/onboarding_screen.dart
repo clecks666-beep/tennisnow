@@ -9,23 +9,22 @@ import '../../../../design_system/widgets/app_logo.dart';
 import '../../../../design_system/widgets/primary_button.dart';
 import '../../../../shared/data/app_preferences.dart';
 
-/// One value slide in the intro.
 class _OnboardingPage {
-  final IconData icon;
+  final String imagePath;
   final String title;
   final String body;
 
   const _OnboardingPage({
-    required this.icon,
+    required this.imagePath,
     required this.title,
     required this.body,
   });
 }
 
-/// First-launch onboarding: communicates the core loop in a few seconds and
-/// drops the user into the app, defeating the empty-app problem (CLAUDE.md §4,
-/// memory.md.txt). Shown once; the router gate (see goRouterProvider) keeps it
-/// from reappearing. Skippable so it never adds forced friction.
+/// First-launch onboarding: communicates the core loop (play → log → level up)
+/// in a few seconds and drops the user into the app, defeating the empty-app
+/// problem (CLAUDE.md §4, memory.md.txt). Shown once; the router gate keeps it
+/// from reappearing. Always skippable so it never adds forced friction.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -36,25 +35,22 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   static const List<_OnboardingPage> _pages = [
     _OnboardingPage(
-      icon: Icons.bolt_rounded,
-      title: 'Log in seconds',
-      body:
-          'Capture a match or training session the moment you walk off court — '
-          'with smart defaults, it takes one tap.',
+      imagePath: 'assets/images/brand/onboarding/onboarding_1_log.png',
+      title: 'Log your session in seconds',
+      body: 'Walk off court and tap to log. Smart defaults mean one tap does '
+          'it — match result, feel and gear optional.',
     ),
     _OnboardingPage(
-      icon: Icons.favorite_rounded,
-      title: 'Capture how you felt',
-      body:
-          'Add your mood, energy and equipment alongside performance. That\'s '
-          'what reveals why you play your best.',
+      imagePath: 'assets/images/brand/onboarding/onboarding_2_level_up.png',
+      title: 'Watch your skills level up',
+      body: 'Every session fills your Player Profile — serve, forehand, '
+          'footwork, mental game. Real progress, made visible.',
     ),
     _OnboardingPage(
-      icon: Icons.insights_rounded,
-      title: 'See what lifts your game',
-      body:
-          'Watch your trends, keep a streak alive and earn badges. Small wins '
-          'that keep you coming back.',
+      imagePath: 'assets/images/brand/onboarding/onboarding_3_motivation.png',
+      title: 'Play. Log. Level up.',
+      body: 'Earn XP, keep streaks and unlock badges. Your game grows like '
+          'an RPG character — every point earned on court.',
     ),
   ];
 
@@ -70,7 +66,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    // Persist first so the router gate lets us through, then enter the app.
     await ref.read(appPreferencesProvider).setOnboardingComplete(true);
     if (!mounted) return;
     context.go('/sessions');
@@ -81,8 +76,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       _finish();
     } else {
       _controller.nextPage(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeInOut,
       );
     }
   }
@@ -90,12 +85,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Brand presence on the very first screen builds trust and tells
-            // the user what they're in (§10 first impression). The logo is
-            // centred; Skip stays reachable on the right without forcing it.
             SizedBox(
               height: 56,
               child: Stack(
@@ -117,16 +110,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 controller: _controller,
                 itemCount: _pages.length,
                 onPageChanged: (i) => setState(() => _index = i),
-                itemBuilder: (context, i) => _OnboardingPageView(page: _pages[i]),
+                itemBuilder: (context, i) =>
+                    _OnboardingPageView(page: _pages[i]),
               ),
             ),
-            _Dots(count: _pages.length, index: _index),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.screen),
-              child: PrimaryButton(
-                label: _isLast ? 'Get started' : 'Next',
-                onPressed: _next,
-              ),
+            _BottomBar(
+              count: _pages.length,
+              index: _index,
+              isLast: _isLast,
+              onNext: _next,
             ),
           ],
         ),
@@ -142,61 +134,124 @@ class _OnboardingPageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            height: 112,
-            width: 112,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.10),
-              shape: BoxShape.circle,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Illustration — takes ~58% of the available page height.
+        Expanded(
+          flex: 58,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              child: Image.asset(
+                page.imagePath,
+                fit: BoxFit.cover,
+              ),
             ),
-            child: Icon(page.icon, size: 56, color: AppColors.primary),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            page.title,
-            style: AppTextStyles.titleLarge,
-            textAlign: TextAlign.center,
+        ),
+        // Text — left-aligned for a premium editorial feel.
+        Expanded(
+          flex: 42,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.sm,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(page.title, style: AppTextStyles.titleLarge),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  page.body,
+                  style: AppTextStyles.body
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            page.body,
-            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _Dots extends StatelessWidget {
+/// Dots indicator + CTA in a single bottom bar so the layout stays fixed
+/// regardless of page content height.
+class _BottomBar extends StatelessWidget {
   final int count;
   final int index;
+  final bool isLast;
+  final VoidCallback onNext;
 
-  const _Dots({required this.count, required this.index});
+  const _BottomBar({
+    required this.count,
+    required this.index,
+    required this.isLast,
+    required this.onNext,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < count; i++)
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            height: 8,
-            width: i == index ? 24 : 8,
-            decoration: BoxDecoration(
-              color: i == index ? AppColors.primary : AppColors.outline,
-              borderRadius: BorderRadius.circular(AppRadii.pill),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screen,
+        AppSpacing.sm,
+        AppSpacing.screen,
+        AppSpacing.lg,
+      ),
+      child: Row(
+        children: [
+          // Dots
+          Row(
+            children: [
+              for (var i = 0; i < count; i++)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                  height: 8,
+                  width: i == index ? 24 : 8,
+                  decoration: BoxDecoration(
+                    color: i == index
+                        ? AppColors.primary
+                        : AppColors.outline,
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
+                  ),
+                ),
+            ],
+          ),
+          const Spacer(),
+          // CTA
+          FilledButton(
+            onPressed: onNext,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.sm,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(isLast ? 'Get started' : 'Next'),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(
+                  isLast ? Icons.rocket_launch_rounded : Icons.arrow_forward_rounded,
+                  size: 18,
+                ),
+              ],
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 }

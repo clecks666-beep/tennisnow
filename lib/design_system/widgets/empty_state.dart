@@ -6,8 +6,13 @@ import '../tokens/app_text_styles.dart';
 /// A motivating, action-guiding empty state (CLAUDE.md §4: empty states must
 /// never be blank dead-ends and should guide the next action). Reused by any
 /// list that can be empty.
+///
+/// Provide either [icon] or [imagePath] for the visual. [imagePath] takes
+/// precedence when both are given — it shows the raster illustration from
+/// assets/images/brand/empty_states/ for screens that have one.
 class EmptyState extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? imagePath;
   final String title;
   final String message;
   final String? actionLabel;
@@ -15,12 +20,14 @@ class EmptyState extends StatelessWidget {
 
   const EmptyState({
     super.key,
-    required this.icon,
+    this.icon,
+    this.imagePath,
     required this.title,
     required this.message,
     this.actionLabel,
     this.onAction,
-  });
+  }) : assert(icon != null || imagePath != null,
+            'Provide either icon or imagePath');
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +37,20 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: AppColors.primary),
-            const SizedBox(height: AppSpacing.md),
-            Text(title, style: AppTextStyles.titleMedium, textAlign: TextAlign.center),
+            if (imagePath != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+                child: Image.asset(
+                  imagePath!,
+                  height: 220,
+                  fit: BoxFit.cover,
+                ),
+              )
+            else
+              Icon(icon, size: 64, color: AppColors.primary),
+            const SizedBox(height: AppSpacing.lg),
+            Text(title,
+                style: AppTextStyles.titleMedium, textAlign: TextAlign.center),
             const SizedBox(height: AppSpacing.sm),
             Text(
               message,

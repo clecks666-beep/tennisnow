@@ -9,6 +9,9 @@ import 'badge_visuals.dart';
 /// Renders one [Achievement] with explicit earned / locked states (do-not-break
 /// rule #5). Locked badges are dimmed and show progress toward the threshold —
 /// motivating, not punishing.
+///
+/// Uses the raster badge asset from assets/images/brand/badges/ when available
+/// (via [badgeAssetFor]); falls back to the Material icon from [badgeIconFor].
 class BadgeTile extends StatelessWidget {
   final Achievement achievement;
 
@@ -18,6 +21,7 @@ class BadgeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final earned = achievement.earned;
     final color = earned ? AppColors.primary : AppColors.textSecondary;
+    final assetPath = badgeAssetFor(achievement.badge.id);
 
     return Opacity(
       opacity: earned ? 1 : 0.55,
@@ -37,7 +41,19 @@ class BadgeTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(badgeIconFor(achievement.badge.id), color: color),
+                // PNG asset when available; icon otherwise.
+                if (assetPath != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                    child: Image.asset(
+                      assetPath,
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else
+                  Icon(badgeIconFor(achievement.badge.id), color: color),
                 const Spacer(),
                 if (earned)
                   const Icon(Icons.check_circle,

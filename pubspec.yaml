@@ -39,3 +39,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/brand/icons/
+    - assets/images/brand/badges/
+    - assets/images/brand/onboarding/
+    - assets/images/brand/empty_states/
