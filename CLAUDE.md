@@ -206,3 +206,395 @@ lib/
 8. **Offline-first** — the core loop must work with no network.
 9. **Scope discipline** — architect for community/accounts/sync now, but BUILD the single-player gamified loop first; do not build community features yet.
 ```
+
+---
+
+## 10. PREMIUM PRODUCT DESIGN, UX & QUALITY STANDARDS
+
+### Höchste Priorität
+
+Dieses Projekt soll nicht nur technisch funktionieren.
+
+Das Ziel ist die Entwicklung eines Produkts, das sowohl technisch als auch visuell auf höchstem Niveau umgesetzt wird.
+
+Design, User Experience und wahrgenommene Qualität haben dieselbe Priorität wie Funktionalität, Stabilität, Sicherheit und Codequalität.
+
+Eine technisch korrekte, aber durchschnittlich aussehende Lösung gilt nicht als abgeschlossen.
+
+---
+
+### Grundsatz
+
+Arbeite nicht wie ein Entwickler, der Funktionen implementiert.
+
+Arbeite wie ein erfahrenes Produktteam bestehend aus:
+
+* Product Designern
+* UX Designern
+* Frontend Spezialisten
+* Software Architekten
+* Produktmanagern
+
+Jede Entscheidung soll die Qualität des Endprodukts erhöhen.
+
+---
+
+### Premium-Produkt Standard
+
+Jede Seite, jede Komponente und jede Interaktion soll sich wie ein modernes Premium-Produkt anfühlen.
+
+Die Anwendung soll wirken, als wäre sie von einem professionellen Team entwickelt worden und nicht wie ein internes Entwickler-Tool.
+
+Ziel ist kein durchschnittliches Design.
+
+Ziel ist ein modernes, professionelles und hochwertiges Nutzererlebnis.
+
+Jede Oberfläche soll wirken, als wäre sie mehrfach überarbeitet, getestet und optimiert worden.
+
+---
+
+### Homepage Standard
+
+Die Homepage ist kein technischer Einstiegspunkt.
+
+Die Homepage ist ein Verkaufs-, Vertrauens- und Begeisterungsinstrument.
+
+Die Homepage muss:
+
+* modern wirken
+* professionell wirken
+* Vertrauen erzeugen
+* Kompetenz ausstrahlen
+* hochwertig wirken
+* visuell beeindrucken
+* die wichtigsten Vorteile sofort kommunizieren
+
+Jeder Besucher soll innerhalb weniger Sekunden verstehen:
+
+* Was das Produkt macht
+* Warum es besser ist
+* Warum er es nutzen sollte
+
+Die Homepage soll sich auf Premium-Niveau bewegen.
+
+---
+
+### Design First
+
+Vor jeder UI-Implementierung prüfen:
+
+* Ist dies die attraktivste Lösung?
+* Ist dies die intuitivste Lösung?
+* Ist dies die hochwertigste Lösung?
+* Ist dies die modernste Lösung?
+* Würde ein professionelles SaaS-Unternehmen dies veröffentlichen?
+
+Wenn nicht: weiter optimieren.
+
+Funktionierende Lösungen mit schlechtem UX gelten nicht als fertig.
+
+---
+
+### Entscheidungsregel bei mehreren Lösungen
+
+Wenn mehrere technisch korrekte Lösungen möglich sind, darf die Entscheidung nicht ausschließlich anhand der Implementierungsgeschwindigkeit oder technischen Einfachheit getroffen werden.
+
+Bewerte jede Lösung zusätzlich nach:
+
+* User Experience
+* Designqualität
+* Professionalität
+* Konsistenz
+* Wartbarkeit
+* Skalierbarkeit
+* wahrgenommener Produktqualität
+
+Bevorzuge die Lösung mit der höchsten Gesamtqualität für den Endanwender.
+
+---
+
+### Premium statt Minimum
+
+Implementiere niemals die kleinstmögliche Lösung nur weil sie funktioniert.
+
+Suche stattdessen nach der Lösung mit dem besten Verhältnis aus:
+
+* Qualität
+* Benutzerfreundlichkeit
+* Wartbarkeit
+* visueller Wirkung
+* langfristiger Skalierbarkeit
+
+Das Ziel ist nicht: "Es funktioniert."
+
+Das Ziel ist: "Es fühlt sich professionell an."
+
+---
+
+### Design als Wettbewerbsvorteil
+
+Das Design ist kein dekorativer Zusatz.
+
+Das Design ist ein zentraler Bestandteil des Produkts.
+
+Jede neue Funktion muss nicht nur technisch korrekt umgesetzt werden, sondern auch:
+
+* optisch überzeugen
+* Vertrauen schaffen
+* hochwertig wirken
+* intuitiv nutzbar sein
+
+Designentscheidungen sollen aktiv zur wahrgenommenen Qualität des Produkts beitragen.
+
+---
+
+### Design Exploration Pflicht
+
+Bei jeder größeren UI-Änderung:
+
+1. Mindestens drei Lösungsansätze evaluieren
+2. Vor- und Nachteile bewerten
+3. Beste UX auswählen
+4. Beste visuelle Qualität auswählen
+5. Beste langfristige Wartbarkeit auswählen
+
+Die erste funktionierende Lösung darf nicht automatisch verwendet werden.
+
+---
+
+### Design-System Pflicht
+
+Vermeide:
+
+* uneinheitliche Buttons
+* uneinheitliche Farben
+* uneinheitliche Abstände
+* uneinheitliche Schriftgrößen
+* uneinheitliche Komponenten
+
+Bevorzuge:
+
+* wiederverwendbare Komponenten
+* konsistente Designregeln
+* klare visuelle Hierarchien
+* saubere Layoutsysteme
+* einheitliche Interaktionsmuster
+
+---
+
+### Buttons
+
+Buttons müssen:
+
+* klar erkennbar sein
+* hochwertig wirken
+* konsistente Größen verwenden
+* eindeutige Hover States besitzen
+* eindeutige Active States besitzen
+* eindeutige Disabled States besitzen
+
+Buttons dürfen niemals generisch oder lieblos wirken.
+
+---
+
+### Typografie
+
+Typografie ist ein Kernelement des Designs.
+
+Achte auf:
+
+* moderne Schriftarten
+* klare Lesbarkeit
+* konsistente Größen
+* ausreichende Kontraste
+* klare Hierarchie
+
+Vermeide typografische Unruhe.
+
+---
+
+### Layout
+
+Layouts müssen:
+
+* großzügig wirken
+* ausreichend Weißraum besitzen
+* logisch gruppiert sein
+* auf allen Bildschirmgrößen funktionieren
+
+Vermeide:
+
+* überladene Oberflächen
+* zu enge Abstände
+* chaotische Anordnungen
+
+---
+
+### Animationen
+
+Animationen sind Teil der User Experience.
+
+Animationen dürfen nicht zufällig eingesetzt werden.
+
+Sie müssen:
+
+* Orientierung schaffen
+* Interaktionen verdeutlichen
+* Qualität vermitteln
+* Modernität vermitteln
+* die Anwendung lebendig wirken lassen
+
+Bevorzuge:
+
+* subtile Bewegungen
+* sanfte Übergänge
+* hochwertige Hover States
+* Mikrointeraktionen
+* animierte Zustandswechsel
+* hochwertige Ladezustände
+* elegante Seitenübergänge
+* flüssige Bewegungen
+
+Vermeide:
+
+* aufdringliche Effekte
+* unnötige Bewegungen
+* visuelles Chaos
+
+---
+
+### Visuelle Qualität
+
+Achte besonders auf:
+
+* Typografie
+* Weißraum
+* Farbkontraste
+* Hierarchie
+* Lesbarkeit
+* Konsistenz
+* Komponentendesign
+
+Alle Elemente müssen wie aus einem Guss wirken.
+
+---
+
+### Komponentenqualität
+
+Buttons, Inputs, Modals, Tabellen, Cards und Navigationen müssen:
+
+* hochwertig aussehen
+* professionell wirken
+* konsistent gestaltet sein
+* moderne Interaktionsmuster verwenden
+* visuelles Feedback geben
+
+Generische Standard-UI ist nicht akzeptabel.
+
+---
+
+### UX Excellence
+
+Reduziere konsequent:
+
+* Klicks
+* Reibung
+* Verwirrung
+* unnötige Entscheidungen
+* unnötige Eingaben
+
+Maximiere:
+
+* Klarheit
+* Geschwindigkeit
+* Effizienz
+* Vertrauen
+* Freude bei der Nutzung
+
+---
+
+### Mobile Premium Experience
+
+Mobile ist gleichwertig zu Desktop.
+
+Keine Funktion darf sich auf Mobile wie eine abgespeckte Version anfühlen.
+
+Die mobile Erfahrung muss denselben Qualitätsstandard erfüllen.
+
+---
+
+### Benchmark-Prinzip
+
+Vergleiche wichtige Oberflächen gedanklich mit modernen Premium-Produkten.
+
+Orientiere dich an den Qualitätsstandards führender SaaS-, Finanz-, Analyse- und Produktivitätsanwendungen.
+
+Übernimm keine Designs direkt.
+
+Übernimm die Qualitätsansprüche.
+
+---
+
+### Liebe zum Detail
+
+Achte auf Details.
+
+Dazu gehören insbesondere:
+
+* perfekte Abstände
+* visuelle Balance
+* konsistente Komponenten
+* hochwertige Hover States
+* saubere Übergänge
+* sinnvolle Animationen
+* präzise Typografie
+* hochwertige Ladezustände
+* klare Fehlermeldungen
+* durchdachte Micro-Interactions
+
+Kleine Details summieren sich zur wahrgenommenen Produktqualität.
+
+---
+
+### Finale Qualitätsfrage
+
+Vor Abschluss jeder UI-Änderung beantworten:
+
+* Würde diese Oberfläche in einem professionellen SaaS-Produkt bestehen?
+* Würde sie in einem Design-Showcase positiv auffallen?
+* Wirkt sie modern?
+* Wirkt sie hochwertig?
+* Wirkt sie vertrauenswürdig?
+* Wirkt sie professionell?
+* Würde ein zahlender Kunde sie als hochwertig wahrnehmen?
+
+Falls nicht: weiter verbessern.
+
+---
+
+### Goldener Standard
+
+Die Anwendung soll nicht wirken, als wäre sie von einer KI generiert worden.
+
+Sie soll wirken, als hätte ein erfahrenes Team aus:
+
+* Senior Product Designern
+* UX Spezialisten
+* Frontend Engineers
+* Produktmanagern
+
+mehrere Iterationen investiert, um das bestmögliche Ergebnis zu erzielen.
+
+Jede neue Oberfläche soll dieses Niveau anstreben.
+
+---
+
+### Endziel
+
+Das Projekt soll nicht wie ein funktionierendes Tool wirken.
+
+Es soll wie ein professionelles, kommerzielles Premium-Produkt wirken.
+
+Jede Entscheidung soll dazu beitragen, die Anwendung visuell, funktional und emotional auf ein möglichst hohes Niveau zu bringen.
+
+Wenn mehrere technisch gleichwertige Lösungen existieren, bevorzuge immer die Lösung mit der besseren User Experience, höheren visuellen Qualität, professionelleren Außenwirkung und höheren wahrgenommenen Produktqualität.
