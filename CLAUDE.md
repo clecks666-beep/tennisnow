@@ -598,3 +598,421 @@ Es soll wie ein professionelles, kommerzielles Premium-Produkt wirken.
 Jede Entscheidung soll dazu beitragen, die Anwendung visuell, funktional und emotional auf ein möglichst hohes Niveau zu bringen.
 
 Wenn mehrere technisch gleichwertige Lösungen existieren, bevorzuge immer die Lösung mit der besseren User Experience, höheren visuellen Qualität, professionelleren Außenwirkung und höheren wahrgenommenen Produktqualität.
+
+---
+
+## 11. AI-FIRST ARCHITECTURE & INTELLIGENCE LAYER
+
+> **Übergeordnete Kostenregel (gilt für ALLES in diesem Abschnitt):**
+> KI ist mächtig, aber nicht gratis. **Jeder API-Aufruf kostet Tokens und damit echtes Geld.**
+> KI wird **nur dort eingesetzt, wo sie echten, spürbaren Mehrwert liefert** — niemals dekorativ, niemals "weil man es kann".
+> Die **Token-/API-Kosten sind bei jeder KI-Nutzung maximal zu berücksichtigen — spare ein, wo immer möglich**, ohne die Ergebnisqualität an den Stellen zu opfern, an denen KI echten Nutzen bringt.
+> AI-First heißt **intelligent-first**, nicht **teuer-first**: die beste Lösung ist die, die mit minimalen Tokens maximalen Nutzen erzeugt.
+
+### Grundprinzip
+
+Diese Anwendung ist konsequent AI-First.
+
+Künstliche Intelligenz ist kein optionales Zusatzfeature und kein nachträglicher Komfortlayer.
+
+KI ist ein zentraler Bestandteil der Produktarchitektur, der Produktlogik, der Nutzererfahrung und der Wertschöpfung der Anwendung.
+
+Die Anwendung soll nicht nur Daten speichern, anzeigen oder verwalten.
+
+Sie soll Daten verstehen, interpretieren, bewerten, verdichten, personalisieren und in konkrete, relevante Erkenntnisse, Empfehlungen und nächste Schritte übersetzen.
+
+Überall dort, wo KI echten Mehrwert liefern kann, ist KI aktiv und bevorzugt einzusetzen — **stets unter maximaler Beachtung der Token-/API-Kosten (siehe Kostenregel oben).**
+
+---
+
+### Verbindliche Entscheidungsregel
+
+Bei jeder neuen Funktion, jedem neuen Modul, jeder Auswertung, jedem UI-Bereich, jeder Nutzerinteraktion und jeder Produktentscheidung ist zuerst zu prüfen:
+
+- Kann KI diese Funktion intelligenter machen?
+- Kann KI hier Erkenntnisse statt nur Rohdaten liefern?
+- Kann KI hier Personalisierung ermöglichen?
+- Kann KI hier Kontext verstehen statt starre Regeln auszuführen?
+- Kann KI hier bessere Empfehlungen, Bewertungen oder Erklärungen erzeugen?
+- Kann KI hier manuelle Interpretation, starre Logik oder statische Inhalte ersetzen?
+
+Wenn die Antwort **ja** ist, dann ist eine KI-basierte oder KI-gestützte Lösung **bevorzugt umzusetzen** — sofern der Nutzen die Token-/API-Kosten rechtfertigt.
+
+Nicht zuerst hardcoden und später KI ergänzen.
+
+Zuerst prüfen, ob KI die bessere Architekturentscheidung ist.
+
+**Gegenfrage immer mitstellen:** Rechtfertigt der Mehrwert die Tokenkosten? Lässt sich derselbe Nutzen mit weniger/kürzerem Kontext, kleinerem Modell, Caching oder seltenerem Aufruf erreichen? Wenn ja, ist die sparsamere Variante zu wählen.
+
+---
+
+### AI vor Hardcoding
+
+Bevor Regeln, Inhalte, Hinweise, Bewertungen oder Auswertungen fest implementiert werden, ist immer zu prüfen, ob diese durch KI besser, flexibler, personalisierter und kontextbezogener erzeugt werden können.
+
+Dies gilt insbesondere für:
+
+- Analysen
+- Bewertungen
+- Empfehlungen
+- Erklärungen
+- Hinweise
+- Zusammenfassungen
+- Motivation
+- Coaching
+- Interpretationen
+- Mustererkennung
+- Verhaltensanalysen
+- Trendanalysen
+- Priorisierungen
+- Optimierungsvorschläge
+- Nutzerfeedback
+- kontextbezogene UI-Inhalte
+
+Starre Logik ist nur dann zu bevorzugen, wenn:
+
+- deterministisches Verhalten zwingend notwendig ist
+- rechtliche, sicherheitsrelevante oder compliancekritische Vorgaben dies erfordern
+- die KI an dieser Stelle keinen echten Mehrwert schafft
+- eine feste Business-Regel technisch oder fachlich zwingend ist
+- **eine deterministische/lokale Berechnung dasselbe Ergebnis ohne Tokenkosten liefert** (dann ist die kostenfreie Lösung Pflicht — z. B. Streak, XP, Level, Skill-Score bleiben pure Domain-Logik, kein KI-Call)
+
+In allen anderen Fällen gilt:
+
+**dynamisch, intelligent, datenbasiert und KI-gestützt vor statisch und hart codiert — bei gleichzeitig sparsamstem Tokeneinsatz.**
+
+---
+
+### Rolle der KI im Produkt
+
+Die KI ist die zentrale Intelligenzschicht der Anwendung.
+
+Sie soll nicht nur Texte erzeugen, sondern aktiv Bedeutung aus Daten ableiten und den Nutzer intelligent unterstützen.
+
+Die KI darf und soll verwendet werden für:
+
+- Analysen
+- Bewertungen
+- Interpretationen
+- Empfehlungen
+- Zusammenfassungen
+- Coaching
+- Motivation
+- Personalisierung
+- Mustererkennung
+- Verhaltensanalyse
+- Trendanalyse
+- Stärken-/Schwächen-Erkennung
+- Risikoerkennung
+- Priorisierung
+- Entscheidungsunterstützung
+- Optimierungsvorschläge
+- nächste sinnvolle Schritte
+- kontextbezogene Hilfestellung
+- domänenspezifische Erkenntnisse
+
+Die KI ist damit nicht Dekoration, sondern ein aktiver funktionaler Bestandteil des Produkts.
+
+---
+
+### Dynamische Inhalte statt statischer Inhalte
+
+Wo immer sinnvoll, sind statische Inhalte zu vermeiden.
+
+Vermeide insbesondere:
+
+- fest codierte Tipps
+- fest codierte Empfehlungen
+- fest codierte Analysen
+- fest codierte Erklärungen
+- fest codierte Motivationssprüche
+- fest codierte Coaching-Inhalte
+- generische Standardhinweise ohne Datenbezug
+- starre Textbausteine für komplexe Einschätzungen
+
+Bevorzuge stattdessen:
+
+- dynamisch generierte Inhalte
+- datenbasierte Inhalte
+- kontextabhängige Inhalte
+- nutzerspezifische Inhalte
+- verlaufsbezogene Inhalte
+- situationsabhängige Inhalte
+- priorisierte Inhalte auf Basis realer Signale
+- adaptive Inhalte abhängig vom Verhalten, Zustand und Verlauf
+
+Die Anwendung soll Inhalte nicht einfach anzeigen.
+
+Sie soll relevante Inhalte intelligent erzeugen.
+
+**Kostenbewusst dabei:** dynamische KI-Inhalte werden nur (neu) generiert, wenn sich die zugrunde liegenden Daten relevant geändert haben. Ergebnisse werden zwischengespeichert (cachen) und wiederverwendet, statt bei jedem Screen-Aufbau erneut die API zu rufen.
+
+---
+
+### Daten verstehen statt nur anzeigen
+
+Die Anwendung darf Daten nicht nur speichern, tabellarisch anzeigen oder visualisieren.
+
+Die KI soll vorhandene Daten aktiv interpretieren und daraus verwertbare Erkenntnisse ableiten.
+
+Dazu gehören insbesondere:
+
+- Auffälligkeiten erkennen
+- Muster erkennen
+- Trends erkennen
+- Entwicklungen bewerten
+- Zusammenhänge herstellen
+- Stärken und Schwächen identifizieren
+- Verbesserungspotenziale erkennen
+- Risiken sichtbar machen
+- Ursachen vermuten und begründen
+- sinnvolle nächste Schritte empfehlen
+- komplexe Daten verständlich erklären
+
+Das Produkt soll nicht bei Zahlen enden.
+
+Es soll ihre Bedeutung liefern.
+
+**Kostenbewusst dabei:** der KI wird verdichteter, vorab aggregierter Kontext übergeben (z. B. fertige Aggregate/Trends aus SQL, nicht die rohe Session-Historie). Vor-Aggregation in der Domain spart Tokens und verbessert die Antwortqualität.
+
+---
+
+### Explainability als Standard
+
+Jede wichtige KI-Aussage soll nachvollziehbar, begründet und verständlich sein.
+
+Wenn möglich, soll die KI zusätzlich angeben:
+
+- auf welche Daten sie sich stützt
+- welche Kennzahlen relevant waren
+- welche Muster erkannt wurden
+- warum eine bestimmte Einschätzung entsteht
+- welche Faktoren die Bewertung beeinflussen
+- welche Unsicherheiten oder Datenlücken bestehen
+
+Die KI soll nicht nur Antworten liefern.
+
+Sie soll ihre Einschätzung transparent machen.
+
+Explainability ist kein optionales Extra, sondern Qualitätsstandard.
+
+---
+
+### Personalisierung als Kernanforderung
+
+Antworten, Einschätzungen, Empfehlungen und Coaching-Inhalte sollen möglichst auf Basis individueller Nutzerdaten entstehen.
+
+Generische Standardantworten sind zu vermeiden, sobald nutzerbezogene Daten, Verlauf, Kontext oder Verhalten verfügbar sind.
+
+Bevorzuge:
+
+- personalisierte Antworten
+- kontextbezogene Analysen
+- verlaufsbezogene Bewertungen
+- datenbasierte Priorisierung
+- individualisierte Empfehlungen
+- adaptive Feedback-Logik
+- auf den aktuellen Zustand des Nutzers zugeschnittene Inhalte
+
+Die Anwendung soll den Nutzer nicht allgemein ansprechen.
+
+Sie soll den konkreten Nutzer in seiner konkreten Situation verstehen.
+
+---
+
+### Psychologie- und Coaching-Layer
+
+Die KI darf und soll psychologische Unterstützung im Rahmen des Produktzwecks bereitstellen, sofern dies sinnvoll ist.
+
+Mögliche Anwendungsfelder:
+
+- Motivation
+- Fokus
+- Selbstreflexion
+- Routinen
+- Gewohnheiten
+- mentale Stärke
+- Disziplin
+- Verhaltensanalyse
+- Frustrationsmuster
+- Leistungsblockaden
+- Selbststeuerung
+- Konsequenz und Umsetzung
+
+Diese Inhalte dürfen nicht generisch oder oberflächlich sein.
+
+Sie sollen:
+
+- personalisiert
+- datenbasiert
+- situationsabhängig
+- verständlich
+- konkret
+- hilfreich
+- handlungsorientiert
+
+sein.
+
+Die KI soll nicht nur beschreiben, sondern gezielt unterstützen.
+
+---
+
+### Domänenspezifische Intelligenz
+
+Die KI soll domänenspezifische Muster, Bewertungen und Empfehlungen aus realen Nutzerdaten ableiten.
+
+#### Beispiel: Tennis-App
+
+Die KI soll anhand vorhandener Daten eigenständig:
+
+- Spielmuster erkennen
+- Leistung bewerten
+- Stärken identifizieren
+- Schwächen identifizieren
+- mentale Muster erkennen
+- Verbesserungspotenziale erkennen
+- Trainingsschwerpunkte empfehlen
+- Matchanalysen erzeugen
+- psychologische Hinweise liefern
+- motivierende Hinweise liefern
+- konkrete Trainingsimpulse ableiten
+
+Diese Inhalte dürfen nicht starr hinterlegt sein.
+
+Sie sollen aus echten Nutzerdaten, echten Verläufen und echten Mustern entstehen.
+
+#### Beispiel: Trading Journal
+
+Die KI soll anhand vorhandener Trading-Daten eigenständig:
+
+- Verhaltensmuster erkennen
+- Fehler analysieren
+- emotionale Muster erkennen
+- Risikoverhalten bewerten
+- Disziplin bewerten
+- Stärken identifizieren
+- Schwächen identifizieren
+- Coaching-Feedback erzeugen
+- Verbesserungsmöglichkeiten priorisieren
+- Zusammenfassungen erstellen
+- konkrete nächste Verhaltensverbesserungen empfehlen
+
+Diese Erkenntnisse sollen datenbasiert und intelligent entstehen, nicht primär aus starren Regeln.
+
+---
+
+### API-First AI Architecture
+
+Alle KI-Funktionen müssen über eine zentrale AI/API-Schicht laufen.
+
+Vermeide ausdrücklich:
+
+- verstreute KI-Logik im Frontend
+- direkt in UI-Komponenten eingebettete Modellaufrufe
+- doppelte oder inkonsistente Prompt-Definitionen
+- unstrukturierte KI-Nutzung an vielen Stellen
+- providerabhängige KI-Logik tief im Produktcode
+- schwer austauschbare Modellkopplungen
+
+Die Architektur muss so aufgebaut sein, dass:
+
+- Modelle austauschbar bleiben
+- KI-Provider austauschbar bleiben
+- Prompts zentral verwaltet werden
+- Prompt-Versionen kontrollierbar sind
+- Kontexte zentral aufgebaut werden
+- Logging und Monitoring zentral möglich sind
+- AI-Features testbar und erweiterbar bleiben
+- zukünftige Erweiterungen einfach integriert werden können
+- KI-Funktionalität nicht an einzelne UI-Elemente gebunden ist
+
+Die KI gehört in eine zentrale, kontrollierte Intelligenzschicht.
+
+Nicht verteilt und unkoordiniert in die Oberfläche.
+
+**Kostensteuerung gehört in genau diese zentrale Schicht** — sie ist die einzige Stelle, an der Tokenverbrauch kontrolliert, gemessen und optimiert werden kann. Dort verbindlich:
+
+- **Modellwahl nach Aufgabe:** das kleinste/günstigste Modell, das die Aufgabe gut löst (z. B. Haiku für einfache Klassifikation/Zusammenfassung, größeres Modell nur für echte Analysetiefe). Nicht pauschal das teuerste Modell.
+- **Prompt-Caching** für stabile System-/Kontextanteile nutzen, um wiederholte Eingabe-Tokens zu sparen.
+- **Kontext minimieren:** nur die wirklich relevanten, vorab aggregierten Daten übergeben — keine rohen, ungefilterten Datenmengen.
+- **Output begrenzen:** `max_tokens` und strukturierte, knappe Ausgaben statt unnötig langer Freitexte.
+- **Ergebnisse cachen & wiederverwenden;** Re-Generierung nur bei relevanter Datenänderung, nicht bei jedem Rebuild/Screen-Aufruf.
+- **Aufrufe bündeln/entprellen** statt viele kleine Calls; redundante Aufrufe vermeiden.
+- **Tokenverbrauch zentral loggen/monitoren**, um teure Pfade sichtbar zu machen und gezielt zu optimieren.
+
+---
+
+### Qualitätsanforderungen an KI-Ausgaben
+
+Jede KI-Ausgabe soll nach Möglichkeit folgende Eigenschaften erfüllen:
+
+- relevant
+- datenbasiert
+- kontextbezogen
+- personalisiert
+- verständlich
+- begründet
+- strukturiert
+- nützlich
+- umsetzbar
+- konsistent
+- priorisiert
+- fachlich sinnvoll
+
+Wenn keine ausreichende Datenbasis vorhanden ist, soll die KI dies transparent machen.
+
+Keine künstliche Sicherheit vortäuschen.
+
+Keine leeren Phrasen.
+
+Keine generischen Fülltexte.
+
+Keine unbegründeten Aussagen.
+
+Lieber klare Einschränkung als scheinpräzise Beliebigkeit.
+
+**Kostenbewusst dabei:** kurz, strukturiert und umsetzbar schlägt lang und ausschweifend — knappe, dichte Ausgaben sind nicht nur bessere UX, sondern sparen auch Output-Tokens.
+
+---
+
+### Zukunftsregel für neue Features
+
+Jedes neue Feature ist aktiv darauf zu prüfen, ob KI den Nutzen erhöhen kann.
+
+Pflichtfragen bei jeder Erweiterung:
+
+- Kann KI hier Erkenntnisse liefern?
+- Kann KI hier Personalisierung ermöglichen?
+- Kann KI hier Kontext verstehen?
+- Kann KI hier dynamische Inhalte erzeugen?
+- Kann KI hier manuelle Interpretation reduzieren?
+- Kann KI hier Coaching, Bewertung oder Handlungsempfehlungen liefern?
+- Kann KI hier den Nutzer wirksamer begleiten?
+- Kann KI hier aus Daten echten Mehrwert erzeugen?
+- **Rechtfertigt der erwartete Mehrwert die Token-/API-Kosten — und ist es der sparsamste Weg, ihn zu erreichen?**
+
+Wenn ja, muss KI in Konzeption, Datenmodell, Architektur und UX aktiv berücksichtigt werden.
+
+KI darf nicht nachträglich „aufgesetzt" werden.
+
+Sie ist von Anfang an mitzudenken — **und ebenso von Anfang an kostenbewusst zu dimensionieren.**
+
+---
+
+### Zielbild
+
+Die Anwendung soll nicht nur Informationen verwalten.
+
+Die Anwendung soll Informationen verstehen.
+
+Die Anwendung soll nicht nur Daten sammeln.
+
+Die Anwendung soll aus Daten Erkenntnisse erzeugen.
+
+Die Anwendung soll nicht nur berichten, was passiert ist.
+
+Die Anwendung soll erklären, warum es passiert ist, was es bedeutet und was als Nächstes sinnvoll ist.
+
+Die Anwendung soll den Nutzer aktiv unterstützen, coachen, analysieren, begleiten und verbessern.
+
+Die KI ist dabei die zentrale Analyse-, Bewertungs-, Coaching-, Personalisierungs- und Intelligenzschicht des Produkts — **eingesetzt mit Augenmaß, nur wo sie echten Mehrwert schafft, und stets so token- und kostensparend wie möglich.**
