@@ -1018,3 +1018,157 @@ Die Anwendung soll erklären, warum es passiert ist, was es bedeutet und was als
 Die Anwendung soll den Nutzer aktiv unterstützen, coachen, analysieren, begleiten und verbessern.
 
 Die KI ist dabei die zentrale Analyse-, Bewertungs-, Coaching-, Personalisierungs- und Intelligenzschicht des Produkts — **eingesetzt mit Augenmaß, nur wo sie echten Mehrwert schafft, und stets so token- und kostensparend wie möglich.**
+
+---
+
+## 12. Research-Driven Growth, Usability, Adoption & Ethical Retention
+
+For every feature, flow, screen, component, onboarding step, form, dashboard, CTA, empty state, notification, settings page, landing page, pricing interaction, activation mechanic, and retention decision, always research and apply current, evidence-based usability, UX, and behavioral-design best practices from reputable web sources.
+
+Use reputable sources such as:
+
+- Nielsen Norman Group (NN/g)
+- Material Design / Google Design
+- Baymard Institute
+- GOV.UK Design System / Service Manual
+- WCAG / W3C
+- official behavioral-science sources
+- academic or highly credible UX / psychology resources
+
+Primary objective:
+Design the product so that it reaches, converts, activates, satisfies, and retains as many users as possible through excellent usability, clarity, speed, usefulness, accessibility, and trust.
+
+Always optimize for:
+
+- maximum discoverability
+- maximum clarity
+- minimum friction
+- fastest possible time-to-value
+- strongest first-use experience
+- highest onboarding completion
+- highest activation rate
+- highest repeat usage
+- highest feature adoption
+- strongest sustainable retention
+- high trust and perceived product quality
+- excellent mobile usability
+- excellent accessibility
+
+Always think across the full product lifecycle:
+
+1. acquisition
+2. first impression
+3. onboarding
+4. activation
+5. first success / first value moment
+6. repeat value
+7. habit formation through genuine usefulness
+8. retention
+9. deeper feature adoption
+10. referral / advocacy
+
+For every task, feature, or UX decision, identify:
+
+- the user's core goal
+- the fastest path to value
+- likely confusion points
+- likely friction points
+- likely abandonment points
+- moments where motivation drops
+- moments where trust can increase
+- opportunities to create momentum and confidence
+
+Then improve the experience using proven usability and psychology principles such as:
+
+- visibility of system status
+- immediate and clear feedback
+- real-world language and familiar mental models
+- recognition rather than recall
+- progressive disclosure
+- strong visual hierarchy
+- scannable layouts
+- clear information scent
+- obvious next actions
+- sensible defaults
+- low-friction input patterns
+- reduced cognitive load
+- fewer unnecessary choices
+- error prevention
+- easy recovery and undo
+- contextual guidance
+- meaningful empty states
+- visible progress and progress reinforcement
+- confidence-building interactions
+- useful product education in context
+
+When optimizing for growth, activation, and retention, use ethical behavioral design:
+
+- reduce effort required for meaningful actions
+- make the value of the next step obvious
+- place prompts at the right moment
+- reinforce successful actions with immediate feedback
+- use progress, completion, micro-wins, and momentum to keep users moving
+- help users reach their first meaningful outcome as fast as possible
+- create repeat-usage loops around real user benefit
+- increase autonomy, competence, confidence, and trust
+- make the product rewarding because it is useful, fast, clear, and satisfying
+
+Always look for opportunities to improve:
+
+- signup conversion
+- onboarding completion
+- activation rate
+- time to first value
+- task success rate
+- feature discoverability
+- repeat sessions
+- user retention
+- user satisfaction
+- trust
+- perceived quality
+- referral likelihood
+- support-ticket reduction
+- mobile completion rate
+
+For every UX recommendation, briefly explain:
+
+1. which user problem, friction point, or growth bottleneck it solves
+2. which usability principle it improves
+3. which psychological or behavioral mechanism it uses
+4. how it increases conversion, activation, retention, satisfaction, or trust
+5. why it is ethical and user-beneficial
+
+Always prefer:
+
+- shorter paths to value
+- less confusion
+- less user effort
+- clearer decisions
+- stronger guidance
+- cleaner interfaces
+- better mobile ergonomics
+- higher accessibility
+- more visible outcomes
+- more confidence-building interactions
+- contextual help instead of overload
+- sustainable retention through genuine product value
+
+When uncertainty exists:
+
+- do not guess blindly
+- search for evidence
+- state the hypothesis clearly
+- propose an experiment or A/B test
+- define measurable success metrics
+- recommend the highest-upside option with the lowest unnecessary friction
+
+Hard rules:
+
+- Do not output generic UX advice.
+- Output concrete, modern, product-specific recommendations tailored to the exact audience, use case, device context, and business goal.
+- Do not preserve mediocre UX if a significantly better version is possible.
+- Think like a top-tier product designer, UX researcher, conversion optimizer, and behavioral design strategist at the same time.
+
+Ethics guardrail:
+Never use dark patterns, deception, coercion, fake urgency, fake scarcity, misleading countdowns, hidden costs, forced continuity, hard-to-cancel flows, manipulative consent, misleading nudges, confirmshaming, or intentionally harmful addiction mechanics.
+Optimize for long-term trust, user benefit, product quality, and sustainable retention.
