@@ -53,6 +53,23 @@ class EquipmentItems extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// A single skill self-rating recorded with a session (the "what I worked on"
+/// capture). Owned by its session; the active aggregate joins on the session so
+/// ratings of a deleted session drop out. Sync-ready invariant columns included.
+class SkillRatings extends Table {
+  TextColumn get id => text()();
+  TextColumn get sessionId => text()();
+  TextColumn get skillId => text()();
+  IntColumn get value => integer()(); // 1..5
+  DateTimeColumn get recordedAt => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Plain data-layer carrier for aggregate results. Kept out of the domain so the
 /// shared DB never imports a feature's domain types; repositories map it across.
 class SessionAggregates {
@@ -76,8 +93,7 @@ class SessionAggregates {
 }
 
 /// Per-equipment performance aggregate (data-layer carrier).
-class EquipmentPerformanceRow {
-  final String name;
+class EquipmentPerformanceRow {  final String name;
   final double avgPerformance;
   final int sessions;
 
@@ -88,7 +104,7 @@ class EquipmentPerformanceRow {
   });
 }
 
-@DriftDatabase(tables: [Sessions, EquipmentItems])
+@DriftDatabase(tables: [Sessions, EquipmentItems, SkillRatings])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -96,11 +112,12 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   /// Schema migrations. ANY schema change must bump [schemaVersion] and add an
   /// upgrade step here so existing on-device data is never broken (CLAUDE.md §2,
-  /// ADR-006). v1→v2 adds the equipment table; v2→v3 adds stringing columns.
+  /// ADR-006). v1→v2 adds equipment; v2→v3 adds stringing columns; v3→v4 adds
+  /// the skill-ratings table.
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
@@ -112,6 +129,9 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(equipmentItems, equipmentItems.stringName);
             await m.addColumn(equipmentItems, equipmentItems.tensionKg);
             await m.addColumn(equipmentItems, equipmentItems.lastStrungAt);
+          }
+          if (from < 4) {
+            await m.createTable(skillRatings);
           }
         },
       );
@@ -238,6 +258,50 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<EquipmentItem>> allActiveEquipmentOnce() {
     return (select(equipmentItems)..where((t) => t.deletedAt.isNull())).get();
+  }
+
+  // ---- skill self-ratings ----
+
+  /// Active skill ratings whose session is also active (inner join), so ratings
+  /// of a soft-deleted session drop out without touching the rating rows.
+  Stream<List<SkillRating>> watchActiveSkillRatings() {
+    final query = select(skillRatings).join([
+      innerJoin(
+        sessions,
+        sessions.id.equalsExp(skillRatings.sessionId),
+        useColumns: false,
+      ),
+    ])
+      ..where(skillRatings.deletedAt.isNull() & sessions.deletedAt.isNull());
+    return query
+        .watch()
+        .map((rows) => rows.map((r) => r.readTable(skillRatings)).toList());
+  }
+
+  Future<List<SkillRating>> skillRatingsForSession(String sessionId) {
+    return (select(skillRatings)
+          ..where((t) => t.sessionId.equals(sessionId) & t.deletedAt.isNull()))
+        .get();
+  }
+
+  /// Replaces a session's skill ratings: soft-deletes the existing active ones
+  /// (sync-safe tombstone) and inserts the new set, in one transaction.
+  Future<void> replaceSkillRatingsForSession(
+    String sessionId,
+    List<SkillRatingsCompanion> rows,
+    DateTime now,
+  ) {
+    return transaction(() async {
+      await (update(skillRatings)
+            ..where((t) => t.sessionId.equals(sessionId) & t.deletedAt.isNull()))
+          .write(SkillRatingsCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ));
+      for (final row in rows) {
+        await into(skillRatings).insert(row);
+      }
+    });
   }
 
   /// Average performance grouped by the equipment recorded on sessions, best

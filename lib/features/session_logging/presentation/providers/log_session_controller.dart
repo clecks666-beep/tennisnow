@@ -40,8 +40,9 @@ class LogSessionController extends AsyncNotifier<void> {
 
   /// Builds a [TennisSession] from the draft and saves it (upsert by id).
   /// When [existing] is given this is an edit: id, createdAt and playedAt are
-  /// preserved and only updatedAt is bumped. Returns true on success.
-  Future<bool> save(SessionDraft draft, {TennisSession? existing}) async {
+  /// preserved and only updatedAt is bumped. Returns the saved session on
+  /// success (so the caller can attach skill ratings), or null on error.
+  Future<TennisSession?> save(SessionDraft draft, {TennisSession? existing}) async {
     state = const AsyncLoading();
     final repository = ref.read(sessionRepositoryProvider);
     final now = DateTime.now();
@@ -62,7 +63,7 @@ class LogSessionController extends AsyncNotifier<void> {
     );
 
     state = await AsyncValue.guard(() => repository.add(session));
-    return !state.hasError;
+    return state.hasError ? null : session;
   }
 
   static String? _trimToNull(String? value) {

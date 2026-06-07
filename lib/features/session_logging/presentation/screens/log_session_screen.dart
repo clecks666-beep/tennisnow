@@ -11,6 +11,8 @@ import '../../../../design_system/widgets/selectable_chip_group.dart';
 import '../../../../shared/domain/session_type.dart';
 import '../../../equipment/presentation/widgets/equipment_picker_field.dart';
 import '../../../settings/presentation/providers/settings_controller.dart';
+import '../../../skills/presentation/providers/skill_rating_controller.dart';
+import '../../../skills/presentation/widgets/skill_rating_sheet.dart';
 import '../../domain/match_result.dart';
 import '../../domain/tennis_session.dart';
 import '../providers/log_session_controller.dart';
@@ -45,6 +47,9 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
   /// Selected equipment NAME, chosen via the picker (stored on the session).
   String? _equipmentName;
 
+  /// skillId -> 1..5 self-ratings captured for this session (optional).
+  final Map<String, int> _skillRatings = {};
+
   final TextEditingController _noteController = TextEditingController();
 
   bool get _isEdit => widget.existing != null;
@@ -66,6 +71,25 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
       _energy = existing.energy?.value;
       _equipmentName = existing.equipment;
       _noteController.text = existing.note ?? '';
+      _loadSkillRatings(existing.id);
+    }
+  }
+
+  Future<void> _loadSkillRatings(String sessionId) async {
+    final saved = await ref
+        .read(skillRatingControllerProvider.notifier)
+        .loadForSession(sessionId);
+    if (mounted && saved.isNotEmpty) {
+      setState(() => _skillRatings.addAll(saved));
+    }
+  }
+
+  Future<void> _editSkills() async {
+    final result = await showSkillRatingSheet(context, initial: _skillRatings);
+    if (result != null) {
+      setState(() => _skillRatings
+        ..clear()
+        ..addAll(result));
     }
   }
 
@@ -91,12 +115,17 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
     // after this screen's own context is gone.
     final messenger = ScaffoldMessenger.of(context);
 
-    final success = await ref
+    final saved = await ref
         .read(logSessionControllerProvider.notifier)
         .save(draft, existing: widget.existing);
     if (!mounted) return;
 
-    if (success) {
+    if (saved != null) {
+      // Attach the optional skill self-ratings to the just-saved session.
+      await ref
+          .read(skillRatingControllerProvider.notifier)
+          .save(saved.id, saved.playedAt, _skillRatings);
+      if (!mounted) return;
       // The history list updates reactively; pop back and confirm (CLAUDE.md §4).
       context.pop();
       messenger
@@ -210,6 +239,21 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                     value: _equipmentName,
                     onChanged: (name) =>
                         setState(() => _equipmentName = name),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+                  const SectionLabel('Skills worked on', optional: true),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: _editSkills,
+                      icon: const Icon(Icons.fitness_center_outlined, size: 18),
+                      label: Text(
+                        _skillRatings.isEmpty
+                            ? 'Add skills'
+                            : '${_skillRatings.length} skills rated · edit',
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: AppSpacing.lg),

@@ -76,7 +76,7 @@ Model it as a small **pure-domain catalog** (one source of truth, like `BadgeCat
 ### E. How EXISTING code aligns (and should evolve)
 - `features/gamification` (streak + badges) is the seed of this system → grows into XP/levels/quests.
 - `features/progress` (stats, trend, performance-by-equipment) → becomes the analytics that feed skill ratings + the Player Profile.
-- `session_logging` → the gameplay input; the optional "skills worked on" capture plugs in here **without** slowing the quick-log path.
+- `session_logging` → the gameplay input; the optional "skills worked on" capture is **built** (`features/skills`): an optional sheet on the log form persists per-session skill self-ratings (1–5), recency-weighted into per-skill `SkillScore`s shown in Progress ("Your skills") → grows into the Player Profile radar.
 - `equipment` → feeds equipment-synergy skill insight.
 - `settings` → home for profile/personalization; future community/account settings.
 Prefer **derived-not-stored** for progression where feasible (compute from sessions), persisting only what derivation can't reconstruct (e.g. explicit skill self-ratings, unlocked-badge timestamps).

@@ -9,6 +9,7 @@ import '../../../../design_system/widgets/empty_state.dart';
 import '../../../../design_system/widgets/mini_line_chart.dart';
 import '../../../../design_system/widgets/stat_card.dart';
 import '../../../gamification/presentation/widgets/gamification_strip.dart';
+import '../../../skills/presentation/widgets/skills_summary.dart';
 import '../../domain/equipment_performance.dart';
 import '../../domain/progress_insight.dart';
 import '../../domain/session_stats.dart';
@@ -86,6 +87,11 @@ class _ProgressContent extends ConsumerWidget {
           onRetry: () => ref.invalidate(equipmentPerformanceProvider),
           data: (items) => _EquipmentPerformanceSection(items: items),
         ),
+
+        const SizedBox(height: AppSpacing.lg),
+        Text('Your skills', style: AppTextStyles.titleMedium),
+        const SizedBox(height: AppSpacing.sm),
+        const SkillsSummary(),
       ],
     );
   }

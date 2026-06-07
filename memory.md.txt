@@ -181,6 +181,26 @@ ESTABLISHED REUSABLE PATTERNS — GAMIFICATION (first built in features/gamifica
   render nothing while loading/on error (GamificationStrip uses maybeWhen→shrink) instead of a
   spinner. Only for non-critical, fast, local data — never for a screen's primary content.
 
+SKILL CAPTURE (features/skills, ADR-008)
+----------------------------------------
+- Optional "Skills worked on" sheet on the log form: pick skills (grouped by SkillCategory) + rate each
+  1-5. Persisted PER SESSION in the skill_ratings table (sync-ready cols). NEVER blocks Save (★/§4).
+- PERSISTED, not derived: skill self-ratings are user input that can't be re-derived. The PER-SKILL
+  SCORE (recency-weighted, current form) IS derived from them via SkillRatingCalculator (pure, injected
+  now, half-life GameBalance.skillRecencyHalfLifeDays=30). Shown in Progress "Your skills" (SkillsSummary).
+- DELETED-SESSION CORRECTNESS without cross-feature coupling: watchActiveSkillRatings() INNER JOINs
+  sessions and filters both deletedAt null — ratings of a soft-deleted session drop out automatically,
+  so session_logging never needs to know about skills.
+- EDIT = REPLACE: replaceForSession soft-deletes a session's existing active ratings (tombstone) and
+  inserts the new set in one transaction. Prefill on edit via ratingsForSession.
+- CROSS-FEATURE WIRING: LogSessionController.save now returns the saved TennisSession (not bool) so the
+  log SCREEN can then call skillRatingControllerProvider.save(session.id, playedAt, map). Presentation
+  composing another feature's public provider is allowed; session_logging never imports skills internals.
+- Table SkillRatings -> row SkillRating; domain entity is SkillSelfRating (avoid the generated-class
+  clash, same trick as Sessions/TennisSession).
+- TODO (next): XP bonus for working a focus skill (CLAUDE.md ★C) — needs a skill-rating count in the
+  XP aggregate; deferred to keep this iteration contained.
+
 ESTABLISHED PATTERNS — PROGRESSION & SKILL FOUNDATION (gamification-ready, ADR-007)
 ----------------------------------------------------------------------------------
 - SKILL MODEL: lib/shared/domain/skill/ — Skill, SkillCategory, SkillCatalog (canonical taxonomy, ONE

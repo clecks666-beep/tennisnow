@@ -19,6 +19,11 @@ class GameBalance {
   static const int levelBaseStep = 100;
   static const int levelStepIncrement = 50;
 
+  /// Half-life (days) for recency-weighting skill self-ratings: a rating this
+  /// many days old counts half as much as a fresh one, so a SkillScore reflects
+  /// current form (★ section: recency-weighted skill ratings).
+  static const double skillRecencyHalfLifeDays = 30;
+
   /// Titles by minimum level, highest first. Looked up top-down.
   static const List<({int minLevel, String title})> levelTitles = [
     (minLevel: 15, title: 'Ace'),

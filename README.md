@@ -53,6 +53,7 @@ lib/
     data/         # shared app database + provider (used by multiple features)
   features/
     onboarding/       # first-launch intro (shown once, gated in the router)
+    skills/           # tennis skill self-ratings (capture + recency-weighted scores)
     session_logging/  # log a session + history (domain/data/presentation)
     progress/         # aggregate stats, performance trend, insight (read-only)
     gamification/     # daily streak + badges, derived from sessions (read-only)
