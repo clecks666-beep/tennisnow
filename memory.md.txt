@@ -252,6 +252,33 @@ FELT-MOMENTS — EARNED-PROGRESSION FEEDBACK AFTER SAVE (★/§4/§5)
   Save-tap latency); showEarned is called AFTER context.pop() and is safe because ProgressionReward depends
   only on the captured repo + app-level messenger, never on the disposed widget (no ref/context/mounted).
 
+WEEKLY QUESTS (features/quests)
+-------------------------------
+- WHAT: a "This week's quests" card on the Progress tab = 3 small, optional, ACHIEVABLE weekly goals:
+  (1) log 3 sessions, (2) work this week's ROTATING focus skill in 2 sessions, (3) note mood/energy in
+  2 sessions. Deliberately inclusive — NO match requirement, so a training-only hobby player can complete
+  every quest (achievable = motivating, not nagging; ★D/§4). Hits 3 pillars: streak/consistency, the skill
+  model, and the human side.
+- FULLY DERIVED-NOT-STORED: the board is a PURE function WeeklyQuests.boardFor(now, sessions, skillTags)
+  (quests/domain) — no new Drift table, NO schema bump (stayed v4), injected clock, server-recomputable.
+  Same catalog+pure-function discipline as BadgeCatalog/StreakCalculator. DON'T add a quests table unless
+  something genuinely un-derivable appears (e.g. dismissed/seen state).
+- NO SEPARATE QUEST XP (important honesty call): completing a quest grants ZERO extra XP. Doing the quest
+  IS logging sessions/skills/feeling, which already grant XP via the normal path. Adding quest XP would
+  double-count and invite farming + weekly-reset banking complexity. Quests CHANNEL the work that already
+  levels you, they don't bolt on points. Revisit only with a deliberate, un-farmable design.
+- ROTATING FOCUS SKILL: deterministic by week index = (weekStart - 2024-01-01 Monday).inDays ~/ 7, mod the
+  curated focusSkillRotation list (stroke ids first). Fresh focus every Monday (fresh-start effect) with
+  zero stored state. Quest id stays 'weekly_skill_focus' (stable, community-ready); only the skillId rotates.
+- WEEK WINDOW: local Monday 00:00 (inclusive) .. next Monday 00:00 (exclusive). DateTime.weekday: Mon=1..Sun=7.
+- DATA SEAM: DriftQuestRepository combineLatest2(watchActiveSessions, watchActiveSkillRatings) -> maps Drift
+  rows to feature-neutral carriers (QuestSessionInput{id,playedAt,hasFeeling}, QuestSkillInput{sessionId,
+  skillId}) -> pure evaluator. Domain never imports Drift rows or another feature's entity. Added a reactive
+  watchActiveSessions() (full rows) next to allActiveSessionsOnce() — general-purpose, no schema change.
+- FELT, NOT NOISY: progression is felt right on the card — goal-gradient AppProgressBar + an on-brand "done"
+  state when complete. NO extra post-save SnackBar (the existing felt-moment already fires; a 2nd would be
+  noise). New reusable design-system component: AppProgressBar (animated pill bar) — use it for any goal bar.
+
 ESTABLISHED PATTERNS — PROGRESSION & SKILL FOUNDATION (gamification-ready, ADR-007)
 ----------------------------------------------------------------------------------
 - SKILL MODEL: lib/shared/domain/skill/ — Skill, SkillCategory, SkillCatalog (canonical taxonomy, ONE

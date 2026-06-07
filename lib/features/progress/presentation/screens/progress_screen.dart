@@ -10,6 +10,7 @@ import '../../../../design_system/widgets/empty_state.dart';
 import '../../../../design_system/widgets/mini_line_chart.dart';
 import '../../../../design_system/widgets/stat_card.dart';
 import '../../../gamification/presentation/widgets/gamification_strip.dart';
+import '../../../quests/presentation/widgets/weekly_quests_card.dart';
 import '../../../skills/presentation/widgets/skills_summary.dart';
 import '../../domain/equipment_performance.dart';
 import '../../domain/progress_insight.dart';
@@ -63,6 +64,10 @@ class _ProgressContent extends ConsumerWidget {
       children: [
         // Motivation first: streak + badges (supplementary, self-stateful).
         const GamificationStrip(),
+        const SizedBox(height: AppSpacing.lg),
+
+        // This week's optional quests — a fresh, achievable reason to log.
+        const WeeklyQuestsCard(),
         const SizedBox(height: AppSpacing.lg),
 
         _InsightBanner(text: ProgressInsight.headline(stats)),
