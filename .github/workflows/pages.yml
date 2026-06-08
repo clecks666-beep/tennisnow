@@ -42,7 +42,7 @@ jobs:
             https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-2.4.6/sqlite3.wasm
           curl -fSL -o web/drift_worker.js \
             https://github.com/simolus3/drift/releases/download/drift-2.18.0/drift_worker.js
-      - run: flutter build web --release --base-href /tennisnow/
+      - run: flutter build web --wasm --release --base-href /tennisnow/
       - uses: actions/configure-pages@v5
         with:
           enablement: true

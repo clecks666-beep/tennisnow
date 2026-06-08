@@ -408,6 +408,14 @@ DRIFT GOTCHAS (learned)
   drift ^2.18 in pubspec; URLs are the simolus3 drift/sqlite3.dart GitHub releases). `_openConnection`
   passes the URIs explicitly via DriftWebOptions so web never silently falls back to a broken DB. If
   the web app "loads but can't save/load sessions", suspect these assets first.
+- WEB renderer = WasmGC: the `pages` workflow builds `flutter build web --wasm` (skwasm). Flutter emits
+  a JS fallback (dart2js/CanvasKit) automatically, so WasmGC-less browsers still run — no one is locked
+  out. Runs SINGLE-THREADED on GitHub Pages on purpose: multi-thread skwasm needs cross-origin isolation
+  (COOP/COEP), which GitHub Pages can't set natively (would need the coi-serviceworker hack) AND which
+  currently triggers a Chrome blank-screen bug (flutter#184843). Do NOT add COOP/COEP headers here until
+  that bug is closed AND a header path exists — single-threaded WasmGC is already the faster, safe win
+  over plain dart2js. The drift sqlite3.wasm/worker assets are independent of the Flutter renderer wasm;
+  no conflict. Requires Flutter >= 3.22 (we run 3.44.1).
 
 BACKUP/EXPORT MUST COVER EVERY TABLE + COLUMN (learned the hard way)
 -------------------------------------------------------------------
