@@ -33,7 +33,7 @@ IconData badgeIconFor(String badgeId) {
     case 'fifty_sessions':
       return Icons.workspace_premium_rounded;
     case 'hundred_sessions':
-      return Icons.filter_100_rounded;
+      return Icons.verified_rounded;
     case 'two_hundred_sessions':
       return Icons.diamond_rounded;
     case 'streak_3':
