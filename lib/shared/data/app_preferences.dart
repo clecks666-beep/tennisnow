@@ -17,6 +17,7 @@ class AppPreferences {
   static const String _kDisplayName = 'display_name';
   static const String _kDefaultSessionType = 'default_session_type';
   static const String _kAvatarConfig = 'avatar_config';
+  static const String _kTrainerModeEnabled = 'trainer_mode_enabled';
 
   /// Whether the user has finished (or skipped) first-launch onboarding.
   bool get onboardingComplete => _prefs.getBool(_kOnboardingComplete) ?? false;
@@ -65,6 +66,13 @@ class AppPreferences {
 
   Future<void> setAvatarConfig(AvatarConfig config) =>
       _prefs.setString(_kAvatarConfig, config.toJsonString());
+
+  /// Whether trainer mode (student management) is enabled on this device.
+  bool get trainerModeEnabled =>
+      _prefs.getBool(_kTrainerModeEnabled) ?? false;
+
+  Future<void> setTrainerModeEnabled(bool value) =>
+      _prefs.setBool(_kTrainerModeEnabled, value);
 }
 
 /// Holds the SharedPreferences instance. Overridden in main() with the loaded

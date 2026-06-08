@@ -7,20 +7,24 @@ import '../../../../shared/domain/session_type.dart';
 class SettingsState {
   final String? displayName;
   final SessionType defaultSessionType;
+  final bool trainerModeEnabled;
 
   const SettingsState({
     required this.displayName,
     required this.defaultSessionType,
+    required this.trainerModeEnabled,
   });
 
   SettingsState copyWith({
     String? displayName,
     bool clearDisplayName = false,
     SessionType? defaultSessionType,
+    bool? trainerModeEnabled,
   }) {
     return SettingsState(
       displayName: clearDisplayName ? null : (displayName ?? this.displayName),
       defaultSessionType: defaultSessionType ?? this.defaultSessionType,
+      trainerModeEnabled: trainerModeEnabled ?? this.trainerModeEnabled,
     );
   }
 }
@@ -38,20 +42,26 @@ class SettingsController extends Notifier<SettingsState> {
     return SettingsState(
       displayName: prefs.displayName,
       defaultSessionType: prefs.defaultSessionType,
+      trainerModeEnabled: prefs.trainerModeEnabled,
     );
   }
 
   Future<void> setDisplayName(String? value) async {
     await _prefs.setDisplayName(value);
-    state = SettingsState(
-      displayName: _prefs.displayName, // re-read so empty -> null is consistent
-      defaultSessionType: state.defaultSessionType,
+    state = state.copyWith(
+      displayName: _prefs.displayName,
+      clearDisplayName: _prefs.displayName == null,
     );
   }
 
   Future<void> setDefaultSessionType(SessionType type) async {
     await _prefs.setDefaultSessionType(type);
     state = state.copyWith(defaultSessionType: type);
+  }
+
+  Future<void> setTrainerModeEnabled(bool value) async {
+    await _prefs.setTrainerModeEnabled(value);
+    state = state.copyWith(trainerModeEnabled: value);
   }
 }
 

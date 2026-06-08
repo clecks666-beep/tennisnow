@@ -114,6 +114,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
 
           const SizedBox(height: AppSpacing.lg),
+          const SectionLabel('Trainer mode'),
+          Text(
+            'Enable a dedicated tab to manage students, notes and goals.',
+            style: AppTextStyles.caption,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Card(
+            child: SwitchListTile(
+              secondary: const Icon(Icons.school_outlined,
+                  color: AppColors.primary),
+              title: const Text('Trainer mode'),
+              subtitle: const Text('Show the Trainer tab'),
+              value: settings.trainerModeEnabled,
+              onChanged: controller.setTrainerModeEnabled,
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
           const SectionLabel('Gear'),
           Card(
             child: ListTile(
