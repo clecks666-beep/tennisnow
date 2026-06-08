@@ -2,8 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../features/settings/presentation/providers/settings_controller.dart';
 import '../../../../shared/data/database_provider.dart';
+import '../../../../shared/domain/skill/skill_score.dart';
 import '../../data/drift_trainer_repository.dart';
 import '../../domain/student.dart';
+import '../../domain/student_session.dart';
+import '../../domain/student_stats.dart';
 import '../../domain/training_note.dart';
 import '../../domain/trainer_repository.dart';
 
@@ -24,4 +27,30 @@ final activeStudentsProvider = StreamProvider<List<Student>>((ref) {
 final notesForStudentProvider =
     StreamProvider.family<List<TrainingNote>, String>((ref, studentId) {
   return ref.watch(trainerRepositoryProvider).watchNotesForStudent(studentId);
+});
+
+final studentSessionsProvider =
+    StreamProvider.family<List<StudentSession>, String>((ref, studentId) {
+  return ref
+      .watch(trainerRepositoryProvider)
+      .watchSessionsForStudent(studentId);
+});
+
+final studentStatsProvider =
+    StreamProvider.family<StudentStats, String>((ref, studentId) {
+  return ref.watch(trainerRepositoryProvider).watchStudentStats(studentId);
+});
+
+final studentPerformanceTrendProvider =
+    StreamProvider.family<List<StudentSession>, String>((ref, studentId) {
+  return ref
+      .watch(trainerRepositoryProvider)
+      .watchRecentRatedStudentSessions(studentId);
+});
+
+final studentSkillScoresProvider =
+    StreamProvider.family<List<SkillScore>, String>((ref, studentId) {
+  return ref
+      .watch(trainerRepositoryProvider)
+      .watchStudentSkillScores(studentId);
 });

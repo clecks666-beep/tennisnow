@@ -12,6 +12,8 @@ import '../features/session_logging/domain/tennis_session.dart';
 import '../features/session_logging/presentation/screens/log_session_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/session_logging/presentation/screens/session_list_screen.dart';
+import '../features/trainer/domain/student_session.dart';
+import '../features/trainer/presentation/screens/log_student_session_screen.dart';
 import '../features/trainer/presentation/screens/student_profile_screen.dart';
 import '../features/trainer/presentation/screens/trainer_screen.dart';
 import '../shared/data/app_preferences.dart';
@@ -113,6 +115,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootKey, // detail screen above the shell
         builder: (context, state) => StudentProfileScreen(
           studentId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/trainer/student/:id/log',
+        parentNavigatorKey: _rootKey, // full-screen form above the shell
+        // `extra` carries a StudentSession when editing an existing entry.
+        builder: (context, state) => LogStudentSessionScreen(
+          studentId: state.pathParameters['id']!,
+          existing: state.extra as StudentSession?,
         ),
       ),
     ],

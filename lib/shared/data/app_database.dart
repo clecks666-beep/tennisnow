@@ -138,6 +138,42 @@ class TrainerAssessments extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// All sessions logged by a trainer FOR a specific student.
+class TrainerStudentSessions extends Table {
+  TextColumn get id => text()();
+  TextColumn get studentId => text()();
+  TextColumn get type => text()(); // "training" or "match"
+  DateTimeColumn get playedAt => dateTime()();
+  TextColumn get result => text().nullable()(); // "win" | "loss" | "draw"
+  IntColumn get durationMinutes => integer().nullable()();
+  IntColumn get performance => integer().nullable()(); // 1-5
+  IntColumn get mood => integer().nullable()(); // 1-5
+  IntColumn get energy => integer().nullable()(); // 1-5
+  TextColumn get equipment => text().nullable()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Per-skill ratings recorded by the trainer for a student during a session.
+class TrainerStudentSkillRatings extends Table {
+  TextColumn get id => text()();
+  TextColumn get studentSessionId => text()();
+  TextColumn get skillId => text()();
+  IntColumn get value => integer()(); // 1-5
+  DateTimeColumn get recordedAt => dateTime()(); // session date — drives recency
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Plain data-layer carrier for aggregate results. Kept out of the domain so the
 /// shared DB never imports a feature's domain types; repositories map it across.
 class SessionAggregates {
@@ -180,6 +216,8 @@ class EquipmentPerformanceRow {  final String name;
   TrainerNotes,
   TrainerGoals,
   TrainerAssessments,
+  TrainerStudentSessions,
+  TrainerStudentSkillRatings,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -188,13 +226,14 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   /// Schema migrations. ANY schema change must bump [schemaVersion] and add an
   /// upgrade step here so existing on-device data is never broken (CLAUDE.md §2,
   /// ADR-006). v1→v2 adds equipment; v2→v3 adds stringing columns; v3→v4 adds
   /// skill-ratings table; v4→v5 adds trainer tables (students/notes/goals/
-  /// assessments).
+  /// assessments); v5→v6 adds trainer session tables (student sessions +
+  /// student skill ratings — full session logging for coached players).
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
@@ -215,6 +254,10 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(trainerNotes);
             await m.createTable(trainerGoals);
             await m.createTable(trainerAssessments);
+          }
+          if (from < 6) {
+            await m.createTable(trainerStudentSessions);
+            await m.createTable(trainerStudentSkillRatings);
           }
         },
       );
