@@ -70,6 +70,74 @@ class SkillRatings extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// ── Trainer tables ────────────────────────────────────────────────────────────
+
+/// Trainer's student roster. Named TrainerStudents so the generated row class is
+/// `TrainerStudent`, keeping the domain entity name `Student` free of collision.
+class TrainerStudents extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  IntColumn get birthYear => integer().nullable()();
+  TextColumn get category => text()(); // StudentCategory.name
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get archivedAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Training notes per student. Row class: `TrainerNote`.
+class TrainerNotes extends Table {
+  TextColumn get id => text()();
+  TextColumn get studentId => text()();
+  TextColumn get type => text()(); // NoteType.name
+  TextColumn get content => text()();
+  DateTimeColumn get sessionDate => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Student development goals. Row class: `TrainerGoal`.
+class TrainerGoals extends Table {
+  TextColumn get id => text()();
+  TextColumn get studentId => text()();
+  TextColumn get horizon => text()(); // GoalHorizon.name
+  TextColumn get status => text()(); // GoalStatus.name
+  TextColumn get title => text()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get dueDate => dateTime().nullable()();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Trainer skill assessments for a student. Row class: `TrainerAssessment`.
+class TrainerAssessments extends Table {
+  TextColumn get id => text()();
+  TextColumn get studentId => text()();
+  TextColumn get skillId => text()();
+  IntColumn get rating => integer()(); // 1-5
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get assessedAt => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Plain data-layer carrier for aggregate results. Kept out of the domain so the
 /// shared DB never imports a feature's domain types; repositories map it across.
 class SessionAggregates {
@@ -104,7 +172,15 @@ class EquipmentPerformanceRow {  final String name;
   });
 }
 
-@DriftDatabase(tables: [Sessions, EquipmentItems, SkillRatings])
+@DriftDatabase(tables: [
+  Sessions,
+  EquipmentItems,
+  SkillRatings,
+  TrainerStudents,
+  TrainerNotes,
+  TrainerGoals,
+  TrainerAssessments,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -112,12 +188,13 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   /// Schema migrations. ANY schema change must bump [schemaVersion] and add an
   /// upgrade step here so existing on-device data is never broken (CLAUDE.md §2,
   /// ADR-006). v1→v2 adds equipment; v2→v3 adds stringing columns; v3→v4 adds
-  /// the skill-ratings table.
+  /// skill-ratings table; v4→v5 adds trainer tables (students/notes/goals/
+  /// assessments).
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
@@ -132,6 +209,12 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await m.createTable(skillRatings);
+          }
+          if (from < 5) {
+            await m.createTable(trainerStudents);
+            await m.createTable(trainerNotes);
+            await m.createTable(trainerGoals);
+            await m.createTable(trainerAssessments);
           }
         },
       );
