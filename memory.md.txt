@@ -633,57 +633,69 @@ COSMETIC GATING — BUILT (level-gated, derived-not-stored):
     config somehow holds a now-locked id it renders fine in the preview and just shows as locked in the
     grid — harmless edge case, no guard needed.
 
-NOT YET BUILT (future avatar work, deferred — keep honest):
-  - FELT unlock moment: when a level-up newly unlocks cosmetics, celebrate via the existing
-    ProgressionReward seam (the post-save SnackBar). Pure to compute — diff old vs new level against
-    the catalog. Deliberately deferred to keep the gating commit focused; wire it when polishing
-    level-up feedback. Don't invent a parallel reward path — reuse progressionRewardProvider.
-  - More categories DiceBear adventurer supports but we didn't expose yet: glasses, earrings,
-    features (freckles/blush), hairProbability, etc. Add to AvatarCatalog (with unlockLevel) when
-    desired — gating comes for free via unlockedAt.
+FELT UNLOCK MOMENT — BUILT: ProgressionDelta.unlocksAvatarStyles (bool) is computed in
+  between() — checks if any AvatarCatalog option has unlockLevel in (previousLevel, newLevel].
+  The level-up SnackBar subtitle appends "✨ New avatar styles unlocked!" when true. No new
+  persistence; pure domain check. Tests in progression_delta_test.dart.
+
+AVATAR ON MULTIPLE SURFACES — BUILT:
+  - AvatarEditableHero (design_system/widgets) — reusable avatar+edit-badge+name+link widget,
+    parameterisable by avatarSize/nameStyle. Replaces the private _AvatarHero in profile.
+  - Settings screen: identity card at top (64px avatar, path to editor).
+  - Achievements screen: compact _PlayerHeader (48px avatar + name + level/title above streak).
+
+NOT YET BUILT (future avatar work, deferred):
+  - More DiceBear categories not yet exposed: glasses, earrings, features (freckles/blush),
+    hairProbability, etc. Add to AvatarCatalog (with unlockLevel) when desired.
 
 
-PLANNED FEATURE: EXTENDED GAMIFICATION
-=======================================
-STATUS: Foundation is built (XP, Levels, Streaks, Badges, Quests). Extensions planned below.
+EXTENDED GAMIFICATION — PARTIALLY BUILT
+========================================
+STATUS: Foundation complete. First extension round shipped. See below for built vs. planned.
 
-ACHIEVEMENT SYSTEM EXPANSION:
-  Current BadgeCatalog has 8 badges. Planned additions (add to catalog deliberately, keep meaningful):
-    Volume:  hundred_sessions (100 sessions), two_hundred_sessions (200), first_week (7 distinct days)
-    Matches: fifty_matches (50 matches), hundred_wins (100 wins)
-    Streaks: streak_14 (14-day), streak_30 (30-day)
-    Skills:  skill_rated (tag skills in first session), skill_master (any skill reaches avg ≥ 4.0)
-    Quests:  weekly_complete (finish all 3 weekly quests in one week)
-    Profile: profile_complete (fill in name + default type in Settings)
-  Each new badge needs: BadgeDefinition in BadgeCatalog, PNG in assets/images/brand/badges/, entry in
-  badgeAssetFor(). Follow existing pattern exactly — nothing else to wire.
-  BadgeRarity: add `BadgeRarity { standard, rare, epic, legendary }` to badge.dart and set on each
-  definition. Legendary badges (streak_30, hundred_wins) unlock rare avatar items via UnlockCatalog.
+BUILT (shipped):
+  BadgeRarity { standard, rare, epic, legendary } in badge.dart — rarity field on BadgeDefinition
+    (default standard). Rarity drives BadgeTile visuals (colored border/bg/chip/progress bar) and
+    is available for future cosmetic unlock triggers.
+  New badges shipped (BadgeCatalog now has 15 badges):
+    Volume:  hundred_sessions (epic), two_hundred_sessions (legendary)
+    Streaks: streak_14 (epic), streak_30 (legendary)
+    Matches: fifty_matches (epic), hundred_wins (legendary)
+    Skills:  skill_rated (standard) — new BadgeMetric.skillTaggedSessions wired through
+             GamificationInputs + DriftGamificationRepository (skillSessions was already queried
+             for XP, now also fed to badge inputs).
+  Level title ladder expanded (GameBalance.levelTitles) to 12 levels:
+    1=Rookie, 2=Club Regular, 3=Rallyer(★), 5=Club Player, 6=Club Contender(★), 8=League Player,
+    10=Challenger(★), 13=Tournament Player, 15=Ace(★), 18=Elite, 20=District Champion, 25=Pro-Am.
+    (★ = cosmetic tier; title aligns with avatar unlock so they fire together on the same level-up.)
 
-XP SYSTEM EXTENSION:
+PLANNED (not yet built — keep honest):
+  - skill_master (any skill reaches avg ≥ 4.0) — needs a per-skill score threshold check, a
+    different kind of metric (not a simple int counter). Wire when skill scores are stable.
+  - weekly_complete (finish all 3 quests in one week) — needs quest completion tracking. Deferred.
+  - profile_complete (fill in name + default type) — simple to add when it adds clear value.
+  - first_week (7 distinct calendar days with a session) — needs a distinctDays metric in
+    GamificationInputs; add watchDistinctSessionDays() to AppDatabase when needed.
+  - Badge PNG assets for new badges (hundred_sessions, streak_14, streak_30, fifty_matches,
+    hundred_wins, skill_rated, two_hundred_sessions). Until assets are added, the tile falls back
+    to the icon from badgeIconFor(). No blocker.
+
+XP SYSTEM EXTENSION (still planned):
   Current sources: sessions, matches, wins, skill-tagged sessions (GameBalance constants).
-  Planned additional XP sources (add to XpRules, update GameBalance — keep pure/deterministic):
-    - Goal completion (StudentGoal for trainer mode; for player: future personal goals feature)
-    - Weekly quest completion bonus (revisit ADR — originally set to 0 to avoid farming; reconsider
-      only with a clearly non-farmable design, e.g. flat weekly cap)
-  DO NOT add XP sources that fluctuate downward (would break the monotonic XP invariant).
+  Additional sources to consider (keep monotonic — no downward XP):
+    - Goal completion, weekly quest bonus (revisit with non-farmable design).
+  DO NOT add XP sources that fluctuate downward.
 
-LEVEL TITLES EXPANSION:
-  Current titles cover early levels. Extend the title list in GameBalance for higher levels as the
-  curve grows. Titles should escalate credibly: Rookie → Club Regular → Club Player → Club Contender
-  → League Player → Tournament Regular → Tournament Player → Elite Club → District Champion → Pro-Am.
-  Keep titles tennis-authentic (memory invariant: real tennis semantics, not generic RPG words).
-
-RARITY & COSMETIC UNLOCK MAP (when avatar system ships):
-  Standard items: always available, no unlock needed. Default avatar uses only standard.
+RARITY & FUTURE COSMETIC UNLOCK MAP:
+  Standard items: always available. Default avatar uses only standard.
   Rare items:     unlock at Level 5, streak_7, ten_wins.
   Epic items:     unlock at Level 15, streak_14, fifty_matches.
   Legendary items: unlock at Level 25, streak_30, hundred_wins.
-  Map lives in UnlockCatalog (pure domain, not hardcoded in UI).
+  When building an UnlockCatalog: keep it pure domain, not hardcoded in UI.
 
-COMMUNITY-READY NOTE: all XP, levels, badge states, and unlock conditions are pure+deterministic.
+COMMUNITY-READY NOTE: all badge states and unlock conditions are pure+deterministic.
   When leaderboards/seasons arrive, a server can recompute every player's state from their sessions.
-  Do not store a player's rarity level or title as an opaque value — always re-derive from XP/events.
+  Never store a player's rarity level or title as an opaque value — always re-derive.
 
 
 ================================================================================

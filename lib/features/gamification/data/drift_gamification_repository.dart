@@ -34,6 +34,7 @@ class DriftGamificationRepository implements GamificationRepository {
           streakDays: streak.current,
           matches: agg.matchCount,
           wins: agg.winCount,
+          skillTaggedSessions: skillSessions,
         );
         // Deterministic, re-derivable XP/level from cumulative facts (ADR-007).
         // Skill-tagged sessions add an honest bonus for engaging the skill model.
