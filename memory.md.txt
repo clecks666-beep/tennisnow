@@ -478,3 +478,203 @@ HOW THIS MEMORY EVOLVES
 - PROMOTE a recurring decision to docs/decisions.md if it is significant or hard to reverse.
 - REMOVE nothing that is still true; correct entries that become wrong. Never let this file fill with
   short-term noise.
+
+
+PLANNED FEATURE: TRAINER MODE (Coach Mode)
+==========================================
+STATUS: Not yet built. Architect for it now; build after the single-player gamified loop is solid.
+
+CORE DECISION: Local-first to start, cloud-ready from day one.
+  v1 stores all trainer data on-device (same pattern as player data). A trainer mode TOGGLE in Settings
+  switches between "Player" and "Trainer" views on one device. This lets a coach track students without
+  needing accounts or a backend. When Supabase lands, trainer→student relationships become cloud-synced
+  so a coach can manage multiple devices and students can share their data.
+
+WHAT TRAINER MODE IS:
+  A self-contained parallel track inside the app. The trainer creates student profiles, logs training
+  notes per student, sets goals, and rates skills. A KI layer analyses all of this per student.
+  Trainer data is COMPLETELY SEPARATE from the player's own sessions — different Drift tables, different
+  navigation branch, different providers.
+
+KEY DOMAIN ENTITIES (all sync-ready: id/createdAt/updatedAt/deletedAt):
+  - TrainerStudent { id, name, birthYear?, category(child|youth|adult|tournament), notes(String?),
+      archivedAt?, createdAt, updatedAt, deletedAt }
+  - TrainingNote { id, studentId(FK), type(observation|homework|technique|mental|injury|general),
+      content(String), sessionDate, createdAt, updatedAt, deletedAt }
+  - StudentGoal { id, studentId(FK), horizon(short|mid|long), title, description?,
+      status(open|in_progress|done|archived), dueDate?, completedAt?,
+      createdAt, updatedAt, deletedAt }
+  - StudentSkillAssessment { id, studentId(FK), skillId(String, from SkillCatalog),
+      rating(1–5), notes?, assessedAt, createdAt, updatedAt, deletedAt }
+  All studentId FKs are stable UUIDs — the cloud-sync / RLS seam is already there.
+
+NAVIGATION:
+  New StatefulShellBranch for Trainer tab (only rendered when trainerMode is enabled in AppPreferences).
+  Sub-routes: /trainer (dashboard) → /trainer/student/:id (profile) → /trainer/student/:id/note/new, etc.
+  If trainerMode is off, the tab is hidden and /trainer routes redirect to /sessions.
+
+TRAINER DASHBOARD shows: active students count, students with recent activity, open goals, last notes.
+  All derived from Drift queries — no stored summary rows.
+
+SKILL ASSESSMENT uses the SAME SkillCatalog from shared/domain/skill/ (Strokes, Shot Quality, Physical,
+  Mental). This is intentional — trainer ratings of a student use the same vocabulary as the student's
+  own self-ratings. Future: merge/compare trainer vs. self-assessment.
+
+KI SUPPORT FOR TRAINERS (AI-first, cost-aware per §11):
+  - Input: last N training notes for a student + skill assessments + goals (pre-aggregated in domain,
+    NOT raw rows — keep tokens minimal).
+  - Output: development pattern analysis, recommended training focus, exercise suggestions, mental tips,
+    training plan draft, progress summary.
+  - Cached per student keyed on (studentId + latestNoteId + latestAssessmentId) — regenerate only when
+    data changed. One AI call per student analysis, not per screen render.
+  - Model choice: haiku-class for summaries; larger model only for full training plan generation.
+  - The student's feeling/mood data is personal (§7) — never include raw notes off-device without
+    explicit export. On-device AI calls stay on-device data.
+
+CROSS-FEATURE RULE: features/trainer/ owns its own domain/data/presentation. It may READ shared/domain
+  (SkillCatalog, Rating) but must NEVER import player features' internals. The trainer feature is a
+  sibling, not a child.
+
+SCHEMA VERSION: adding trainer tables requires bumping AppDatabase.schemaVersion and additive
+  MigrationStrategy steps (ADR-006). All five tables above go in one version bump.
+  BackupService MUST be extended to cover all trainer tables when trainer mode ships (learned pitfall).
+
+PITFALL — SCOPE: Trainer mode is a significant feature. Do not mix its implementation into player
+  features "while we're at it." Feature branch, dedicated schema bump, separate provider tree.
+
+
+PLANNED FEATURE: AVATAR SYSTEM (Gamification 2.0)
+==================================================
+STATUS: Not yet built. Design-phase; Replicate asset generation precedes Flutter implementation.
+
+WHAT IT IS:
+  Each user builds a personal tennis character (comic/cartoon style) displayed on their Profile,
+  Achievements, future leaderboards, and the Trainer's student list. The avatar is assembled from
+  pre-made layered PNG assets — NO runtime AI, NO Replicate in the shipped app, fully offline.
+
+TECHNICAL ARCHITECTURE — LAYER COMPOSITION:
+  The avatar is a Flutter Stack of Image.asset() widgets, each layer a PNG with a transparent
+  background. Layer order (bottom → top):
+    1. Background (court/stadium/abstract)
+    2. Body silhouette (one neutral base per gender-presentation option)
+    3. Skin layer — face, neck, arms (one PNG per skin tone, ~8 tones)
+    4. Eyes (4 variants, drawn on top of skin layer)
+    5. Mouth/expression (3 variants)
+    6. Beard / facial hair (4 variants incl. none)
+    7. Glasses (3 variants incl. none)
+    8. Hair (style variants; each style × color = separate PNG)
+    9. Clothing — top (style variants; each design × color = separate PNG)
+   10. Clothing — bottom/shorts (style × color)
+   11. Shoes (design × color)
+   12. Racket (model × color, held in playing-ready pose)
+   13. Accessories (wristband, cap, headband — future)
+  Rendered at a fixed logical size (e.g. 320×400 or similar) in the profile hero.
+
+ASSET STRATEGY — REPLICATE DURING DEVELOPMENT ONLY:
+  - ALL avatar assets are generated once via Replicate (flux-schnell or similar) in a consistent
+    comic/cartoon style and committed to assets/images/avatar/.
+  - The shipped app bundles these PNGs statically. Replicate is NEVER called at runtime.
+  - No API keys needed in the production app. No network calls for avatar rendering. Fully offline.
+  - Style anchor for all Replicate prompts: "flat vector cartoon illustration, clean comic style,
+    modern premium mobile game character art, solid transparent background, tennis theme,
+    consistent line weight and style across all layers." Use IDENTICAL style anchors for every
+    generation batch so all layers match visually.
+
+ASSET SCALE (compact MVP, decided):
+  ~5 options per category. Pre-colored variants (each color = separate PNG, no runtime colorizing).
+  Approximate counts:
+    Hair shapes: 5. Colors per shape: 6 (black, brown, blonde, red, grey, special). → 30 PNGs
+    Skin tones: 8 (one PNG per tone for the skin layer). → 8 PNGs
+    Eyes: 4 variants. → 4 PNGs
+    Mouth: 3 variants. → 3 PNGs
+    Beard: 4 variants (incl. none). → 4 PNGs
+    Glasses: 3 variants (incl. none). → 3 PNGs
+    Clothing tops: 5 designs × 6 colors. → 30 PNGs
+    Clothing bottoms: 4 designs × 5 colors. → 20 PNGs
+    Shoes: 4 designs × 4 colors. → 16 PNGs
+    Rackets: 5 models × 4 colors. → 20 PNGs
+    Backgrounds: 7 (clay, hard, grass, stadium, practice, abstract, premium). → 7 PNGs
+  Total: ~150 assets. All committed to the repo under assets/images/avatar/.
+
+DOMAIN MODEL:
+  - AvatarConfig { hairStyleId, hairColorId, skinToneId, eyeVariantId, mouthVariantId,
+      beardVariantId, glassesVariantId, topStyleId, topColorId, bottomStyleId, bottomColorId,
+      shoeStyleId, shoeColorId, racketModelId, racketColorId, backgroundId }
+  - Persisted in AppPreferences (device-local, NOT synced — cosmetic preference, not domain data).
+    Exception: when community/sharing lands, export AvatarConfig as part of the shareable PlayerCard.
+  - AvatarCatalog: pure domain catalog mapping every *Id to its asset path and metadata
+    (displayName, rarity, unlockCondition). The single source of truth — no string literals scattered.
+
+UNLOCKABLE ITEMS — NEW DRIFT TABLE:
+  - Table `unlocked_items` (sync-ready): { id UUID, itemId String, rarity (standard|rare|epic|legendary),
+      source (level_up|badge|streak|challenge), unlockedAt DateTime,
+      createdAt, updatedAt, deletedAt }
+  - A Dart enum `ItemRarity { standard, rare, epic, legendary }`.
+  - All items start locked. The default loadout uses only standard-rarity items (always available
+    without unlocking) so a new user has a valid avatar immediately.
+  - `UnlockCatalog` (pure domain, like BadgeCatalog): maps itemId → unlock condition. Deterministic,
+    testable, server-recomputable (community-ready invariant).
+  - The "unlock moment" fires through the existing ProgressionReward seam (same SnackBar pattern as
+    XP/badge felt-moments). Reuse that seam — do NOT invent a parallel reward pathway.
+  - BackupService MUST cover unlocked_items when this ships (learned pitfall — see backup section).
+
+AVATAR EDITOR UI:
+  - A scrollable sheet or dedicated /avatar route with category tabs (Hair, Face, Clothing, Gear, Background).
+  - Each tab shows a horizontal scroll of option thumbnails; tapping previews it live on a mini avatar.
+  - Locked items shown with a lock overlay + unlock hint (e.g. "Reach Level 10"). Same motivating-not-
+    punishing pattern as locked badges in BadgeTile.
+  - All design tokens from design_system/ — no one-off colors/sizes.
+
+PITFALL — LAYER ALIGNMENT: Every PNG asset in a layer MUST be generated at the same canvas size and
+  with the character positioned identically (same anchor point, same proportions). A misaligned hair
+  layer on top of a face layer breaks the composition. Enforce this with a strict style + position
+  prompt for every Replicate call: "character centered, full body visible, same canvas size, same
+  proportions as all other layers."
+
+PITFALL — REPLICATE SCOPE CREEP: Avatar assets take many Replicate calls. Always batch them (sequential
+  with rate-limiting, same pattern as existing asset generator). Never generate at runtime. Track all
+  generated asset IDs in assets/images/avatar/manifest.json.
+
+
+PLANNED FEATURE: EXTENDED GAMIFICATION
+=======================================
+STATUS: Foundation is built (XP, Levels, Streaks, Badges, Quests). Extensions planned below.
+
+ACHIEVEMENT SYSTEM EXPANSION:
+  Current BadgeCatalog has 8 badges. Planned additions (add to catalog deliberately, keep meaningful):
+    Volume:  hundred_sessions (100 sessions), two_hundred_sessions (200), first_week (7 distinct days)
+    Matches: fifty_matches (50 matches), hundred_wins (100 wins)
+    Streaks: streak_14 (14-day), streak_30 (30-day)
+    Skills:  skill_rated (tag skills in first session), skill_master (any skill reaches avg ≥ 4.0)
+    Quests:  weekly_complete (finish all 3 weekly quests in one week)
+    Profile: profile_complete (fill in name + default type in Settings)
+  Each new badge needs: BadgeDefinition in BadgeCatalog, PNG in assets/images/brand/badges/, entry in
+  badgeAssetFor(). Follow existing pattern exactly — nothing else to wire.
+  BadgeRarity: add `BadgeRarity { standard, rare, epic, legendary }` to badge.dart and set on each
+  definition. Legendary badges (streak_30, hundred_wins) unlock rare avatar items via UnlockCatalog.
+
+XP SYSTEM EXTENSION:
+  Current sources: sessions, matches, wins, skill-tagged sessions (GameBalance constants).
+  Planned additional XP sources (add to XpRules, update GameBalance — keep pure/deterministic):
+    - Goal completion (StudentGoal for trainer mode; for player: future personal goals feature)
+    - Weekly quest completion bonus (revisit ADR — originally set to 0 to avoid farming; reconsider
+      only with a clearly non-farmable design, e.g. flat weekly cap)
+  DO NOT add XP sources that fluctuate downward (would break the monotonic XP invariant).
+
+LEVEL TITLES EXPANSION:
+  Current titles cover early levels. Extend the title list in GameBalance for higher levels as the
+  curve grows. Titles should escalate credibly: Rookie → Club Regular → Club Player → Club Contender
+  → League Player → Tournament Regular → Tournament Player → Elite Club → District Champion → Pro-Am.
+  Keep titles tennis-authentic (memory invariant: real tennis semantics, not generic RPG words).
+
+RARITY & COSMETIC UNLOCK MAP (when avatar system ships):
+  Standard items: always available, no unlock needed. Default avatar uses only standard.
+  Rare items:     unlock at Level 5, streak_7, ten_wins.
+  Epic items:     unlock at Level 15, streak_14, fifty_matches.
+  Legendary items: unlock at Level 25, streak_30, hundred_wins.
+  Map lives in UnlockCatalog (pure domain, not hardcoded in UI).
+
+COMMUNITY-READY NOTE: all XP, levels, badge states, and unlock conditions are pure+deterministic.
+  When leaderboards/seasons arrive, a server can recompute every player's state from their sessions.
+  Do not store a player's rarity level or title as an opaque value — always re-derive from XP/events.
+
