@@ -48,14 +48,17 @@ CRITICAL ARCHITECTURAL DECISIONS (the "why", so they're never re-litigated blind
   zero logging friction). Chosen because logging friction is the #1 product risk and cloud adds
   none of the core value yet. The schema is sync-ready (see invariant below) so cloud accounts +
   multi-device sync can be ADDED later without a rewrite. Do not add a backend prematurely.
-- PLANNED BACKEND = SUPABASE (future, decided, NOT built yet). The database will move to / sync with
-  Supabase (Postgres + auth + row-level security) when cloud accounts arrive. Keep building toward
-  this WITHOUT building it now: persistence stays behind repository INTERFACES (a future
-  SupabaseXRepository is a drop-in next to the DriftXRepository); keep the id/createdAt/updatedAt/
-  soft-delete invariant on every entity (Postgres rows map 1:1); keep all scoring PURE + DETERMINISTIC
-  so the server (or a Supabase edge function) can recompute/verify XP/levels/skills/quests; design a
-  clean future `userId`/owner seam (RLS will key on it). Do NOT add the supabase package, auth, or
-  network calls until we explicitly start that work — premature backend = logging friction (#1 risk).
+  >>> SUPERSEDED / EXTENDED (2026): the cloud pivot is now GREENLIT — see the section
+  "CLOUD PIVOT: SUPABASE BACKEND + AUTH + TIERS" near the end of this file. Local-first stays as the
+  OFFLINE-FIRST CACHE layer; Supabase becomes the source of truth for signed-in Pro users. Offline-first
+  is NOT abandoned — it is preserved (the core loop must still work with no network).
+- PLANNED BACKEND = SUPABASE — NOW BEING BUILT (was "future, NOT built yet"; greenlit 2026). The
+  database syncs with Supabase (Postgres + auth + row-level security). The forward-design we kept paying
+  for now pays off: persistence stays behind repository INTERFACES (a SupabaseXRepository / a sync layer
+  drops in next to the DriftXRepository); the id/createdAt/updatedAt/soft-delete invariant on every
+  entity maps 1:1 to Postgres rows; all scoring stays PURE + DETERMINISTIC so a Supabase edge function
+  can recompute/verify XP/levels/skills/quests; the `userId`/owner seam (RLS keys on it) gets filled in.
+  Full plan: see "CLOUD PIVOT: SUPABASE BACKEND + AUTH + TIERS" at the end of this file.
 - BRAND MARK = CODED VECTOR (design_system/widgets/app_logo.dart): AppLogoMark (tennis-ball CustomPainter,
   court-green tile + optic-yellow ball + dark-green seam) + AppLogo (mark + "tennisnow" wordmark, "now" in
   brand green). No raster asset on purpose — scales crisply, theme-aware, §5 single-source-of-truth. Used
@@ -677,4 +680,188 @@ RARITY & COSMETIC UNLOCK MAP (when avatar system ships):
 COMMUNITY-READY NOTE: all XP, levels, badge states, and unlock conditions are pure+deterministic.
   When leaderboards/seasons arrive, a server can recompute every player's state from their sessions.
   Do not store a player's rarity level or title as an opaque value — always re-derive from XP/events.
+
+
+================================================================================
+CLOUD PIVOT: SUPABASE BACKEND + AUTH + TIERS  (greenlit 2026; build in progress)
+================================================================================
+STATUS: Decided and being built. This supersedes the original "local-only, no backend yet" stance.
+Supabase itself gets configured AFTER the code is made cloud-ready (this section is the plan; the
+backend wiring comes next). The app is NOT live yet → there is NO existing user data to migrate, so we
+can change schemas/persistence freely WITHOUT migration headaches right now (decided: migration of
+pre-existing local data is a non-issue at this stage).
+
+THE GOAL (in one sentence):
+  Every input, setting and bit of progression for a signed-in Pro user lives in Supabase, so signing in
+  on ANY device restores the exact same state — nothing lost, nothing overwritten, nothing reset.
+
+------------------------------------------------------------------
+A. THE THREE USAGE TIERS (this shapes the WHOLE persistence design)
+------------------------------------------------------------------
+There are now THREE modes the app can run in. Persistence behaves differently in each:
+
+  1. DEMO MODE (no login):
+     - The app is fully usable to try out, BUT NOTHING IS PERSISTED. Ephemeral only.
+     - Implementation: an in-memory / no-op repository set (data lives only for the session, gone on
+       app close). No Drift writes, no Supabase. A clear, non-nagging "you're in demo — sign in to keep
+       your progress" hint where it helps (never blocking the try-it loop).
+     - Purpose: let a new user feel the core loop instantly (beats the empty-app problem) without a
+       signup wall, but make it honest that nothing is saved.
+
+  2. FREE MODE (signed in, not paying):
+     - The app can be used only MINIMALLY (a limited subset of features — exact limits TBD, see open
+       questions), AND persistence is LOCAL-ONLY (Drift on-device). NO CLOUD SYNC for free users.
+     - So a free user keeps their data on THIS device, but it does NOT follow them to another device.
+     - Implementation: the Drift repositories (today's local stack) with the cloud-sync layer DISABLED.
+
+  3. PRO MODE (signed in, paid subscription):
+     - FULL feature set + CLOUD SYNC. Everything (sessions, skills, equipment, settings, avatar,
+       unlocks, trainer data, …) is stored in Supabase and synced across devices.
+     - Offline-first preserved: Drift remains the on-device cache; writes go local-first then sync up;
+       sign-in on a new device pulls the full state down.
+
+  DESIGN CONSEQUENCE: persistence must be SWAPPABLE BY TIER behind the existing repository interfaces.
+  A single `AppMode { demo, free, pro }` (derived from auth state + entitlement) selects which
+  repository implementations are provided (Riverpod override at the root). UI code NEVER branches on
+  tier for storage — it always talks to the same repository interface; only the bound implementation
+  changes. This is exactly why we kept persistence behind interfaces from day one.
+
+  Tier gating of FEATURES (not storage) is separate: a small `entitlementProvider` exposes the current
+  tier so UI can show upgrade prompts / lock Pro features. Keep paywall logic in ONE place (an
+  entitlement/feature-gate module), never scattered `if (isPro)` checks in widgets.
+
+------------------------------------------------------------------
+B. AUTHENTICATION (Supabase Auth)
+------------------------------------------------------------------
+  - METHODS: (1) Email MAGIC LINK (passwordless — primary), (2) GOOGLE sign-in (OAuth). No
+    email+password flow (decided — avoids password reset/support/attack surface).
+  - Supabase Auth provides the session + a stable `auth.uid()` → this IS the `userId` the whole schema
+    keys on. Fill the long-planned owner seam with this id.
+  - A new `features/auth` feature owns: sign-in screen (magic link entry + "Continue with Google"),
+    auth state provider, session handling, sign-out. Lives behind an `AuthRepository` interface
+    (SupabaseAuthRepository impl) so it's testable and swappable.
+  - ROUTER GATE extends the existing onboarding gate: routes are gated by AppMode. Demo users can roam
+    the app; certain actions ("keep your progress", Pro features) route to /auth or an upgrade sheet.
+    Reuse the goRouterProvider + redirect pattern already used for onboarding — do NOT bolt on a second
+    gating mechanism.
+  - Magic-link deep linking: the email link must reopen the app (mobile deep link / universal link;
+    web redirect). This needs platform config (iOS associated domains, Android intent filters) + a
+    redirect URL allowlisted in Supabase. Note for setup phase.
+  - SENSITIVE DATA (§7): feeling/mood/notes are personal. With cloud sync they now LEAVE the device →
+    this is exactly the "explicit user action / consent" boundary the privacy rule warned about.
+    Signing into Pro IS that consent, but: keep RLS strict, never log personal fields, and keep the
+    store privacy declarations accurate (data now leaves the phone for Pro users).
+
+------------------------------------------------------------------
+C. OFFLINE-FIRST SYNC ARCHITECTURE (Pro mode)
+------------------------------------------------------------------
+  - PATTERN: local-first write-through. UI → repository → Drift (immediate, optimistic) → sync engine
+    pushes to Supabase when online; pulls remote changes into Drift. The UI keeps reading Drift streams
+    (today's reactive pattern is unchanged), so the fast-log path stays sacred and offline still works.
+  - WHY this and not "talk to Supabase directly": direct cloud reads/writes would reintroduce logging
+    friction (the #1 risk) and break offline. The cache-then-sync model keeps logging instant.
+  - CONFLICT RESOLUTION: every entity already has updatedAt + UUID id + soft-delete. Use last-write-wins
+    by updatedAt per row (good enough for a single-user-multi-device app; there's no concurrent
+    multi-user editing of the same row). Soft-delete tombstones replicate so deletes propagate (don't
+    hard-delete — a hard delete can't sync as a deletion).
+  - The SYNC ENGINE is its own module (shared/data/sync or a dedicated service). Options to evaluate at
+    build time: (a) hand-rolled push/pull over the Supabase client using updatedAt watermarks per table,
+    (b) Supabase Realtime for live pull, (c) an existing Drift<->Postgres sync helper if one fits. Lean
+    toward the simplest correct option first (watermark push/pull); add Realtime only if live
+    multi-device updates are needed.
+  - DERIVED-NOT-STORED STILL WINS: streaks, XP, levels, badges, quests, skill scores, profile radar are
+    all PURE functions over the synced raw rows. So we sync the FACTS (sessions, skill_ratings,
+    equipment, unlocks, settings) and RE-DERIVE progression on each device identically. Do NOT sync
+    derived numbers as authoritative — re-derive them. (A Supabase edge function can recompute the same
+    values for server-side verification / future leaderboards — community-ready invariant pays off.)
+
+------------------------------------------------------------------
+D. WHAT EVERY PIECE OF STATE MAPS TO (the "store everything" requirement)
+------------------------------------------------------------------
+  ALREADY DRIFT TABLES → become Supabase tables (1:1, same columns + a `user_id` column, RLS on
+  user_id):
+    sessions, equipment_items, skill_ratings  (+ the planned trainer tables, unlocked_items).
+  Each Postgres table: same UUID PK, createdAt/updatedAt/deletedAt, plus user_id uuid references
+  auth.users. RLS policy: a user can only see/write rows where user_id = auth.uid().
+
+  TODAY'S DEVICE-LOCAL PREFS (AppPreferences / shared_preferences) → SPLIT by "should this follow the
+  user across devices?":
+    - SYNC TO CLOUD (belongs to the account): displayName, defaultSessionType, avatar config,
+      onboarding-as-product-state if we want it cross-device, any personalization. These move into a
+      `profiles` table (one row per user) OR a `user_settings` table. They are USER data now, not just
+      device UI state.
+    - STAY DEVICE-LOCAL (never sync): things that are genuinely per-device (e.g. "this device finished
+      onboarding", theme if device-specific, the cached auth session). Keep these in shared_preferences.
+    - The old rule ("Yes→Drift, No→AppPreferences") gets a THIRD bucket now: account-level settings →
+      Supabase profiles. Re-evaluate each existing pref against: device-local vs account-level.
+
+  AVATAR CONFIG: previously planned for AppPreferences (device-local). REVISIT: for Pro it must sync →
+    store AvatarConfig in the `profiles`/`user_settings` row so the avatar follows the user. For
+    free/demo it stays local/ephemeral. (Update the Avatar section's persistence note accordingly when
+    building.)
+
+  UNLOCKS (unlocked_items): cloud table for Pro (cosmetic unlocks follow the user), local for free.
+
+  RESULT: for a Pro user, sessions + equipment + skills + settings + profile/avatar + unlocks + trainer
+  data ALL live in Supabase under their user_id. Sign in on a new device → pull all of it → identical
+  state. Nothing is overwritten or reset (we PULL then reconcile by updatedAt, never blindly wipe).
+
+------------------------------------------------------------------
+E. CODE CHANGES REQUIRED (audit the whole codebase for these)
+------------------------------------------------------------------
+  1. Add `user_id` (nullable for now, set on write when signed in) to every syncable entity + Drift
+     table + mapper + BackupService. It's the owner seam — wire it everywhere a row is created.
+  2. Introduce AppMode (demo|free|pro) + entitlementProvider; provide repository implementations via
+     root Riverpod overrides based on mode. Demo = in-memory repos; free = Drift; pro = Drift+sync.
+  3. features/auth: AuthRepository interface + SupabaseAuthRepository, sign-in screen, auth providers.
+  4. shared/data: add the Supabase client bootstrap (env-based URL + anon key — NEVER commit secrets;
+     use --dart-define / env, keys are public anon keys but still keep config out of source where
+     sensible). Add the sync engine module.
+  5. Repositories: a Supabase-backed or sync-wrapping implementation behind EACH existing repository
+     interface (SessionRepository, EquipmentRepository, SkillRatingRepository, GamificationRepository
+     reads-only/derived, QuestRepository derived, ProgressRepository derived, settings). Derived
+     repos (progress/gamification/quests) need NO cloud calls — they read synced Drift rows.
+  6. Settings: account-level settings move to a profiles store; keep device-local ones in prefs.
+  7. Router: gate by AppMode; add /auth + upgrade routes; magic-link deep-link handling.
+  8. BackupService: still useful as a local export, but cloud sync largely replaces its role for Pro;
+     keep it working and cover any new tables/columns (user_id) so exports stay complete.
+  9. Privacy/store declarations: update to reflect cloud storage of personal data for signed-in users.
+
+  GUARDRAILS that MUST survive the pivot (do-not-break):
+    - Logging stays instant and offline (write local-first; sync in background).
+    - Domain stays pure; scoring stays deterministic & re-derivable (server can verify).
+    - One visual source of truth; no scattered tier-`if`s in widgets (gate in one entitlement module).
+    - Every screen still handles loading/empty/error/success — now ALSO auth/sync states (e.g. "syncing",
+      "offline — will sync", "sign in to keep progress"). Add these as real, calm states, not spinners.
+
+------------------------------------------------------------------
+F. HOSTING & PAYMENTS (open, decide at setup time)
+------------------------------------------------------------------
+  - The MOBILE app ships via App Store / Play Store — it is NOT "hosted". "Hosting" applies to: a
+    marketing/landing site, an optional Flutter WEB build, and any server-side functions.
+  - SUPABASE covers auth, Postgres, RLS, storage, and edge functions (server-side logic / score
+    verification / payment webhooks). That is the backend.
+  - VERCEL (user suggested) is a fine host for a landing page or a Flutter-web build, but is NOT
+    required for the backend (Supabase is). Alternatives for a web/static host: Cloudflare Pages,
+    Netlify, Firebase Hosting — all comparable; pick by preference. NO strong reason to add Vercel
+    unless/until there's a web frontend or marketing site to host. Don't add it speculatively.
+  - PRO PAYMENTS (paid tier) — OPEN QUESTION, decide before building the paywall: on iOS/Android, Apple
+    & Google generally REQUIRE their in-app purchase / subscription billing for digital goods (a Stripe
+    web checkout for app subscriptions can get rejected). Practical path: native IAP via a layer like
+    RevenueCat (handles iOS+Android subscriptions + entitlements) feeding the entitlementProvider;
+    Stripe only for a pure web version. This is a deliberate decision for when monetization is built —
+    not now.
+
+------------------------------------------------------------------
+G. BUILD SEQUENCE (suggested, so we don't break the working app)
+------------------------------------------------------------------
+  1. Make the code cloud-READY without a backend: introduce AppMode + entitlement + auth interface
+     (stubbed), add user_id seam, split settings into device-local vs account-level. App still runs
+     local-only (free-equivalent) and demo.
+  2. Set up Supabase (project, tables mirroring Drift, RLS, auth providers: magic link + Google).
+  3. Wire SupabaseAuthRepository + sign-in screen + router gate.
+  4. Build the sync engine (watermark push/pull), enable it ONLY for Pro mode.
+  5. Add the Pro entitlement source (IAP/RevenueCat) + paywall + feature gating.
+  6. QA the three modes end-to-end: demo (nothing saved), free (local only, no sync), pro (full sync
+     across two devices, offline edits reconcile by updatedAt, nothing lost on re-login).
 
