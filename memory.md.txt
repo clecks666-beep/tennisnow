@@ -546,97 +546,73 @@ PITFALL — SCOPE: Trainer mode is a significant feature. Do not mix its impleme
   features "while we're at it." Feature branch, dedicated schema bump, separate provider tree.
 
 
-PLANNED FEATURE: AVATAR SYSTEM (Gamification 2.0)
-==================================================
-STATUS: Not yet built. Design-phase; Replicate asset generation precedes Flutter implementation.
+AVATAR SYSTEM — BUILT (Gamification 2.0, DiceBear adventurer)
+=============================================================
+STATUS: BUILT (v1). DiceBear adventurer SVG avatars on the Player Profile, with a live editor.
+  The custom layered-PNG plan below it (struck through) was TRIED and ABANDONED — read why first.
 
-WHAT IT IS:
-  Each user builds a personal tennis character (comic/cartoon style) displayed on their Profile,
-  Achievements, future leaderboards, and the Trainer's student list. The avatar is assembled from
-  pre-made layered PNG assets — NO runtime AI, NO Replicate in the shipped app, fully offline.
+WHY THE LAYERED-PNG / REPLICATE PLAN WAS DROPPED (key learning):
+  We ran a real POC (committed under assets/images/avatar_poc/, generator /tmp/avatar_layer_poc.py):
+  generate each body part as an isolated PNG via Replicate flux-schnell, strip the white background
+  with Pillow, alpha-composite the layers in Dart. RESULT: it does NOT work. flux-schnell gives no
+  control over scale/anchor/proportion across separate prompts, so the hair layer doesn't sit on the
+  head, eyes/mouth float, etc. The "PITFALL — LAYER ALIGNMENT" warning turned out to be fatal, not
+  manageable. Full PRESET characters (one prompt → whole figure) look great, but lose the deep
+  customization the user wanted. So a generative-per-layer pipeline is the wrong tool here.
 
-TECHNICAL ARCHITECTURE — LAYER COMPOSITION:
-  The avatar is a Flutter Stack of Image.asset() widgets, each layer a PNG with a transparent
-  background. Layer order (bottom → top):
-    1. Background (court/stadium/abstract)
-    2. Body silhouette (one neutral base per gender-presentation option)
-    3. Skin layer — face, neck, arms (one PNG per skin tone, ~8 tones)
-    4. Eyes (4 variants, drawn on top of skin layer)
-    5. Mouth/expression (3 variants)
-    6. Beard / facial hair (4 variants incl. none)
-    7. Glasses (3 variants incl. none)
-    8. Hair (style variants; each style × color = separate PNG)
-    9. Clothing — top (style variants; each design × color = separate PNG)
-   10. Clothing — bottom/shorts (style × color)
-   11. Shoes (design × color)
-   12. Racket (model × color, held in playing-ready pose)
-   13. Accessories (wristband, cap, headband — future)
-  Rendered at a fixed logical size (e.g. 320×400 or similar) in the profile hero.
+THE SOLUTION — DiceBear adventurer (decided & built):
+  DiceBear (https://www.dicebear.com, MIT, API v9.x) ships avatar styles whose layers are DESIGNED to
+  compose perfectly — alignment is solved by the library, not by us. The `adventurer` style is a
+  friendly flat-vector character that fits the brand. We render it at RUNTIME as an SVG from the public
+  HTTP API; the params ARE the avatar (deterministic URL), so nothing is generated or stored as images.
+  - NO Replicate, NO Pillow, NO committed avatar PNGs, NO build step for avatars.
+  - Render via flutter_svg `SvgPicture.network(config.svgUrl)`. URL is built by AvatarConfig.svgUrl.
+  - Endpoint: https://api.dicebear.com/9.x/adventurer/svg?skinColor=..&hair=..&hairColor=..&eyes=..&
+    mouth=..&backgroundColor=..&backgroundType=solid&radius=50  (radius=50 → pre-clipped circle).
+  - NETWORK NOTE: api.dicebear.com is NOT in the on-web session's network allowlist (returns 403 in
+    this dev env), so the avatar can't be live-previewed from inside a web session — that's an env
+    policy limit, not a code bug. On real devices the app reaches it fine. If avatars render as the
+    grey person-placeholder in a web session, suspect the allowlist first. (Self-hosting DiceBear or
+    bundling its sprites locally is the offline-first upgrade path if we ever want zero network — the
+    package `@dicebear/collection` is MIT; could pre-render the catalog to assets. Postponed.)
 
-ASSET STRATEGY — REPLICATE DURING DEVELOPMENT ONLY:
-  - ALL avatar assets are generated once via Replicate (flux-schnell or similar) in a consistent
-    comic/cartoon style and committed to assets/images/avatar/.
-  - The shipped app bundles these PNGs statically. Replicate is NEVER called at runtime.
-  - No API keys needed in the production app. No network calls for avatar rendering. Fully offline.
-  - Style anchor for all Replicate prompts: "flat vector cartoon illustration, clean comic style,
-    modern premium mobile game character art, solid transparent background, tennis theme,
-    consistent line weight and style across all layers." Use IDENTICAL style anchors for every
-    generation batch so all layers match visually.
+ADVENTURER PARAM VALIDITY (PITFALL — learned): the adventurer style only accepts hair = `short01`..
+  `short19` and `long01`..`long26`. Made-up ids like `curly01`/`braids01`/`pixie` are SILENTLY ignored
+  (DiceBear falls back to a default) — no error, just "my hair picker does nothing." eyes = `variant01`
+  ..`variant26`, mouth = `variant01`..`variant30`. skinColor/hairColor/backgroundColor accept ANY hex
+  (6 chars, no '#'). Whenever extending AvatarCatalog, only use ids in these ranges.
 
-ASSET SCALE (compact MVP, decided):
-  ~5 options per category. Pre-colored variants (each color = separate PNG, no runtime colorizing).
-  Approximate counts:
-    Hair shapes: 5. Colors per shape: 6 (black, brown, blonde, red, grey, special). → 30 PNGs
-    Skin tones: 8 (one PNG per tone for the skin layer). → 8 PNGs
-    Eyes: 4 variants. → 4 PNGs
-    Mouth: 3 variants. → 3 PNGs
-    Beard: 4 variants (incl. none). → 4 PNGs
-    Glasses: 3 variants (incl. none). → 3 PNGs
-    Clothing tops: 5 designs × 6 colors. → 30 PNGs
-    Clothing bottoms: 4 designs × 5 colors. → 20 PNGs
-    Shoes: 4 designs × 4 colors. → 16 PNGs
-    Rackets: 5 models × 4 colors. → 20 PNGs
-    Backgrounds: 7 (clay, hard, grass, stadium, practice, abstract, premium). → 7 PNGs
-  Total: ~150 assets. All committed to the repo under assets/images/avatar/.
+WHAT'S BUILT (files):
+  - shared/domain/avatar/avatar_config.dart — AvatarConfig value object (skinColor, hairStyle,
+    hairColor, eyeStyle, mouthStyle, bgColor), immutable + copyWith, toJson/fromJson + svgUrl getter.
+    Pure domain (no Flutter). defaultConfig gives every new player a valid avatar instantly.
+  - shared/domain/avatar/avatar_catalog.dart — AvatarCatalog: pure catalog of AvatarOption lists
+    (skinColors, hairStyles, hairColors, eyeStyles, mouthStyles, bgColors). Single source of truth,
+    same pattern as BadgeCatalog/SkillCatalog. Extend deliberately; respect the param ranges above.
+  - design_system/widgets/avatar_widget.dart — AvatarWidget(config, size): renders the SVG with a
+    circular grey placeholder while loading. Reusable everywhere (profile hero, future list thumbs).
+  - features/player_profile/presentation/providers/avatar_provider.dart — avatarConfigProvider
+    (StateNotifierProvider) reads/persists AvatarConfig via AppPreferences (prefs aren't reactive on
+    their own — wrapped in a notifier, same rule as settingsControllerProvider). PUBLIC surface.
+  - features/player_profile/presentation/widgets/avatar_editor_sheet.dart — AvatarEditorSheet: modal
+    bottom sheet, category tabs (Skin/Style/Hair/Eyes/Mouth/BG), live preview, edits kept in local
+    _draft and only committed on Save (dismiss = discard). Color swatches + labeled style chips.
+  - player_profile_screen.dart — _AvatarHero at the top (avatar + name + edit badge), always visible
+    even before any logged session (independent of skill data), opens the editor sheet.
 
-DOMAIN MODEL:
-  - AvatarConfig { hairStyleId, hairColorId, skinToneId, eyeVariantId, mouthVariantId,
-      beardVariantId, glassesVariantId, topStyleId, topColorId, bottomStyleId, bottomColorId,
-      shoeStyleId, shoeColorId, racketModelId, racketColorId, backgroundId }
-  - Persisted in AppPreferences (device-local, NOT synced — cosmetic preference, not domain data).
-    Exception: when community/sharing lands, export AvatarConfig as part of the shareable PlayerCard.
-  - AvatarCatalog: pure domain catalog mapping every *Id to its asset path and metadata
-    (displayName, rarity, unlockCondition). The single source of truth — no string literals scattered.
+PERSISTENCE: AvatarConfig lives in AppPreferences (device-local, cosmetic — not domain data, not
+  synced). Stored as a JSON string under key 'avatar_config'. When community/sharing lands, export
+  AvatarConfig as part of the shareable PlayerCard (and it moves to account-level for Pro).
 
-UNLOCKABLE ITEMS — NEW DRIFT TABLE:
-  - Table `unlocked_items` (sync-ready): { id UUID, itemId String, rarity (standard|rare|epic|legendary),
-      source (level_up|badge|streak|challenge), unlockedAt DateTime,
-      createdAt, updatedAt, deletedAt }
-  - A Dart enum `ItemRarity { standard, rare, epic, legendary }`.
-  - All items start locked. The default loadout uses only standard-rarity items (always available
-    without unlocking) so a new user has a valid avatar immediately.
-  - `UnlockCatalog` (pure domain, like BadgeCatalog): maps itemId → unlock condition. Deterministic,
-    testable, server-recomputable (community-ready invariant).
-  - The "unlock moment" fires through the existing ProgressionReward seam (same SnackBar pattern as
-    XP/badge felt-moments). Reuse that seam — do NOT invent a parallel reward pathway.
-  - BackupService MUST cover unlocked_items when this ships (learned pitfall — see backup section).
-
-AVATAR EDITOR UI:
-  - A scrollable sheet or dedicated /avatar route with category tabs (Hair, Face, Clothing, Gear, Background).
-  - Each tab shows a horizontal scroll of option thumbnails; tapping previews it live on a mini avatar.
-  - Locked items shown with a lock overlay + unlock hint (e.g. "Reach Level 10"). Same motivating-not-
-    punishing pattern as locked badges in BadgeTile.
-  - All design tokens from design_system/ — no one-off colors/sizes.
-
-PITFALL — LAYER ALIGNMENT: Every PNG asset in a layer MUST be generated at the same canvas size and
-  with the character positioned identically (same anchor point, same proportions). A misaligned hair
-  layer on top of a face layer breaks the composition. Enforce this with a strict style + position
-  prompt for every Replicate call: "character centered, full body visible, same canvas size, same
-  proportions as all other layers."
-
-PITFALL — REPLICATE SCOPE CREEP: Avatar assets take many Replicate calls. Always batch them (sequential
-  with rate-limiting, same pattern as existing asset generator). Never generate at runtime. Track all
-  generated asset IDs in assets/images/avatar/manifest.json.
+NOT YET BUILT (future avatar work, deferred — keep honest):
+  - Unlockable items / rarity / unlock-on-level-up. The original plan had an `unlocked_items` Drift
+    table + UnlockCatalog + ItemRarity firing through the ProgressionReward seam. With DiceBear, an
+    "unlock" just means gating certain AvatarOption ids behind a level/badge in the catalog + a lock
+    overlay in the editor (same motivating-not-punishing pattern as locked BadgeTiles). No image
+    assets needed. Build when we want cosmetics to be a progression reward. If a Drift table is added
+    for unlocks, BackupService MUST cover it (see backup pitfall).
+  - More categories DiceBear adventurer supports but we didn't expose yet: glasses, earrings,
+    features (freckles/blush), hairProbability, etc. Add to AvatarCatalog when desired.
 
 
 PLANNED FEATURE: EXTENDED GAMIFICATION

@@ -7,8 +7,11 @@ import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_text_styles.dart';
 import '../../../../design_system/widgets/app_progress_bar.dart';
 import '../../../../design_system/widgets/async_value_view.dart';
+import '../../../../design_system/widgets/avatar_widget.dart';
 import '../../../../design_system/widgets/empty_state.dart';
 import '../../../../design_system/widgets/skill_radar_chart.dart';
+import '../../../../shared/data/app_preferences.dart';
+import '../../../../shared/domain/avatar/avatar_config.dart';
 import '../../../../shared/domain/skill/skill_score.dart';
 import '../../../gamification/presentation/providers/gamification_providers.dart';
 import '../../../gamification/presentation/widgets/next_badge_card.dart';
@@ -18,6 +21,8 @@ import '../../../skills/presentation/providers/skill_rating_providers.dart';
 import '../../../skills/presentation/widgets/skills_summary.dart';
 import '../../domain/category_score.dart';
 import '../../domain/player_profile_builder.dart';
+import '../providers/avatar_provider.dart';
+import '../widgets/avatar_editor_sheet.dart';
 
 /// The Player Profile — the gamified centrepiece (★ section): a real-tennis
 /// "character sheet" where logging becomes a felt progression. Level + title as
@@ -36,27 +41,43 @@ class PlayerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scoresAsync = ref.watch(skillScoresProvider);
+    final avatarConfig = ref.watch(avatarConfigProvider);
+    final displayName = ref.watch(appPreferencesProvider).displayName;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Player Profile')),
-      body: AsyncValueView<List<SkillScore>>(
-        value: scoresAsync,
-        onRetry: () => ref.invalidate(skillScoresProvider),
-        data: (scores) {
-          if (scores.isEmpty) {
-            return EmptyState(
-              imagePath:
-                  'assets/images/brand/empty_states/empty_player_profile.png',
-              title: 'Your game starts here',
-              message:
-                  'Log a session and tag the skills you worked on — your serve, '
-                  'backhand, spin and more will start leveling up on your profile.',
-              actionLabel: 'Log a session',
-              onAction: () => context.push('/log'),
-            );
-          }
-          return _ProfileContent(scores: scores);
-        },
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Avatar hero — always visible, independent of skill data.
+          _AvatarHero(
+            config: avatarConfig,
+            displayName: displayName,
+            onEdit: () => AvatarEditorSheet.show(context),
+          ),
+          const Divider(height: 1, color: AppColors.outline),
+          Expanded(
+            child: AsyncValueView<List<SkillScore>>(
+              value: scoresAsync,
+              onRetry: () => ref.invalidate(skillScoresProvider),
+              data: (scores) {
+                if (scores.isEmpty) {
+                  return EmptyState(
+                    imagePath:
+                        'assets/images/brand/empty_states/empty_player_profile.png',
+                    title: 'Your game starts here',
+                    message:
+                        'Log a session and tag the skills you worked on — your serve, '
+                        'backhand, spin and more will start leveling up on your profile.',
+                    actionLabel: 'Log a session',
+                    onAction: () => context.push('/log'),
+                  );
+                }
+                return _ProfileContent(scores: scores);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -351,6 +372,89 @@ class _CategoryRow extends StatelessWidget {
               score.hasData ? score.value.toStringAsFixed(1) : '—',
               style: AppTextStyles.label.copyWith(color: AppColors.textPrimary),
               textAlign: TextAlign.end,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Avatar hero ───────────────────────────────────────────────────────────────
+
+/// Always-visible identity section at the top of the profile — avatar + name +
+/// edit affordance. Independent of skill data so there is always something
+/// personal to see and customise, even before the first logged session.
+class _AvatarHero extends StatelessWidget {
+  final AvatarConfig config;
+  final String? displayName;
+  final VoidCallback onEdit;
+
+  const _AvatarHero({
+    required this.config,
+    required this.displayName,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screen, vertical: AppSpacing.lg),
+      child: Row(
+        children: [
+          // Avatar circle with edit badge overlay
+          GestureDetector(
+            onTap: onEdit,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                AvatarWidget(config: config, size: 80),
+                Positioned(
+                  right: -2,
+                  bottom: -2,
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      border:
+                          Border.all(color: AppColors.surface, width: 2),
+                    ),
+                    child: const Icon(Icons.edit_rounded,
+                        size: 13, color: AppColors.textOnPrimary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName ?? 'Tennis Player',
+                  style: AppTextStyles.titleLarge.copyWith(
+                    color: displayName != null
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                GestureDetector(
+                  onTap: onEdit,
+                  child: Text(
+                    'Customize avatar',
+                    style: AppTextStyles.caption.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
