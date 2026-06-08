@@ -9,11 +9,11 @@ import '../../../../design_system/widgets/async_value_view.dart';
 import '../../../../design_system/widgets/empty_state.dart';
 import '../../../../design_system/widgets/mini_line_chart.dart';
 import '../../../../design_system/widgets/stat_card.dart';
+import '../../../coach/presentation/widgets/coach_card.dart';
 import '../../../gamification/presentation/widgets/gamification_strip.dart';
 import '../../../quests/presentation/widgets/weekly_quests_card.dart';
 import '../../../skills/presentation/widgets/skills_summary.dart';
 import '../../domain/equipment_performance.dart';
-import '../../domain/progress_insight.dart';
 import '../../domain/session_stats.dart';
 import '../../domain/trend_point.dart';
 import '../providers/progress_providers.dart';
@@ -70,7 +70,7 @@ class _ProgressContent extends ConsumerWidget {
         const WeeklyQuestsCard(),
         const SizedBox(height: AppSpacing.lg),
 
-        _InsightBanner(text: ProgressInsight.headline(stats)),
+        const CoachCard(),
         const SizedBox(height: AppSpacing.lg),
 
         _StatsGrid(stats: stats),
@@ -162,28 +162,6 @@ class _EquipmentPerformanceRow extends StatelessWidget {
       trailing: Text(
         '${item.avgPerformance.toStringAsFixed(1)} / 5',
         style: AppTextStyles.label.copyWith(color: AppColors.textPrimary),
-      ),
-    );
-  }
-}
-
-class _InsightBanner extends StatelessWidget {
-  final String text;
-
-  const _InsightBanner({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            const Icon(Icons.emoji_objects_outlined, color: AppColors.primary),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(child: Text(text, style: AppTextStyles.body)),
-          ],
-        ),
       ),
     );
   }
