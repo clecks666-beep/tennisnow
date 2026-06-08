@@ -38,4 +38,18 @@ class GameBalance {
     (minLevel: 3, title: 'Rallyer'),
     (minLevel: 1, title: 'Rookie'),
   ];
+
+  // ---- Cosmetic unlock tiers (avatar customisation) ----
+  // Avatar options are gated by player level so cosmetics become an honest,
+  // earned reward (★C/D). Tiers align with the title ladder above so an unlock
+  // narratively coincides with "becoming a Rallyer / Club Contender / …".
+  // Because level is derived from monotonic XP, an unlock is permanent without
+  // persisting anything — gating stays fully derived-not-stored & community-
+  // ready. NOTE: identity options (skin tones) are NEVER gated — only styles,
+  // expressions, fun hair colours and premium backgrounds.
+  static const int cosmeticTierStart = 1; // available from the first session
+  static const int cosmeticTierRallyer = 3;
+  static const int cosmeticTierContender = 6;
+  static const int cosmeticTierChallenger = 10;
+  static const int cosmeticTierAce = 15;
 }

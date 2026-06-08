@@ -1,6 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tennisnow/core/constants/game_balance.dart';
 import 'package:tennisnow/shared/domain/avatar/avatar_catalog.dart';
 import 'package:tennisnow/shared/domain/avatar/avatar_config.dart';
+
+/// All catalog lists, for invariants that must hold across every category.
+const _allCategories = [
+  AvatarCatalog.skinColors,
+  AvatarCatalog.hairStyles,
+  AvatarCatalog.hairColors,
+  AvatarCatalog.eyeStyles,
+  AvatarCatalog.mouthStyles,
+  AvatarCatalog.bgColors,
+];
 
 void main() {
   group('AvatarConfig.svgUrl', () {
@@ -111,17 +122,76 @@ void main() {
     });
 
     test('option ids within each category are unique', () {
-      for (final list in [
-        AvatarCatalog.skinColors,
-        AvatarCatalog.hairStyles,
-        AvatarCatalog.hairColors,
-        AvatarCatalog.eyeStyles,
-        AvatarCatalog.mouthStyles,
-        AvatarCatalog.bgColors,
-      ]) {
+      for (final list in _allCategories) {
         final ids = list.map((o) => o.id).toList();
         expect(ids.toSet().length, ids.length);
       }
+    });
+  });
+
+  group('AvatarCatalog cosmetic gating', () {
+    test('every default-config option is a starter (usable at level 1)', () {
+      // A brand-new player MUST be able to use the default avatar.
+      const c = AvatarConfig.defaultConfig;
+      AvatarOption optionFor(List<AvatarOption> list, String id) =>
+          list.firstWhere((o) => o.id == id);
+
+      expect(optionFor(AvatarCatalog.skinColors, c.skinColor).unlockedAt(1),
+          isTrue);
+      expect(
+          optionFor(AvatarCatalog.hairStyles, c.hairStyle).unlockedAt(1), isTrue);
+      expect(
+          optionFor(AvatarCatalog.hairColors, c.hairColor).unlockedAt(1), isTrue);
+      expect(optionFor(AvatarCatalog.eyeStyles, c.eyeStyle).unlockedAt(1), isTrue);
+      expect(
+          optionFor(AvatarCatalog.mouthStyles, c.mouthStyle).unlockedAt(1),
+          isTrue);
+      expect(optionFor(AvatarCatalog.bgColors, c.bgColor).unlockedAt(1), isTrue);
+    });
+
+    test('skin tones are NEVER gated (identity, not a reward)', () {
+      for (final tone in AvatarCatalog.skinColors) {
+        expect(tone.isStarter, isTrue,
+            reason: 'skin tone ${tone.id} must be available from the start');
+      }
+    });
+
+    test('every category gives a new player real choice (≥3 starters)', () {
+      for (final list in _allCategories) {
+        final starters = list.where((o) => o.isStarter).length;
+        expect(starters, greaterThanOrEqualTo(3));
+      }
+    });
+
+    test('unlockedAt is monotonic in level around the threshold', () {
+      const opt = AvatarOption(
+          id: 'long13',
+          label: 'Flow',
+          unlockLevel: GameBalance.cosmeticTierContender);
+      expect(opt.unlockedAt(GameBalance.cosmeticTierContender - 1), isFalse);
+      expect(opt.unlockedAt(GameBalance.cosmeticTierContender), isTrue);
+      expect(opt.unlockedAt(GameBalance.cosmeticTierContender + 5), isTrue);
+    });
+
+    test('every unlockLevel is a real, positive level', () {
+      for (final list in _allCategories) {
+        for (final opt in list) {
+          expect(opt.unlockLevel, greaterThanOrEqualTo(1));
+        }
+      }
+    });
+
+    test('catalog uses higher tiers so progression keeps rewarding', () {
+      // Sanity that gating actually exists beyond the starter tier.
+      final gated = _allCategories
+          .expand((l) => l)
+          .where((o) => !o.isStarter)
+          .toList();
+      expect(gated, isNotEmpty);
+      expect(
+        gated.any((o) => o.unlockLevel >= GameBalance.cosmeticTierContender),
+        isTrue,
+      );
     });
   });
 }

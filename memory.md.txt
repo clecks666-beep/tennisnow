@@ -604,15 +604,43 @@ PERSISTENCE: AvatarConfig lives in AppPreferences (device-local, cosmetic — no
   synced). Stored as a JSON string under key 'avatar_config'. When community/sharing lands, export
   AvatarConfig as part of the shareable PlayerCard (and it moves to account-level for Pro).
 
+COSMETIC GATING — BUILT (level-gated, derived-not-stored):
+  - Avatar options are gated by PLAYER LEVEL, making cosmetics an earned reward (★C/D). Each
+    AvatarOption carries `unlockLevel` (default GameBalance.cosmeticTierStart = 1). `unlockedAt(level)`
+    = level >= unlockLevel; `isStarter` = available from the start.
+  - KEY DECISION — NO `unlocked_items` TABLE, NOTHING PERSISTED. The original plan had a Drift
+    unlocked-items table + UnlockCatalog + ItemRarity. Not needed: a player's level is derived from
+    MONOTONIC XP (XP only ever goes up), so `unlockedAt` is monotonic too — once unlocked, always
+    unlocked. Gating is therefore a PURE function of the current level (read live from the public
+    gamificationProvider). Fully derived-not-stored, server-recomputable, community-ready, and the
+    BackupService needs NO change (there's no unlock state to back up). Only revisit a persisted table
+    if we ever need unlock TIMESTAMPS / a "newly unlocked" history — the gating itself never needs one.
+  - TIERS live in GameBalance (cosmeticTierStart/Rallyer/Contender/Challenger/Ace = 1/3/6/10/15),
+    aligned to the title ladder so an unlock coincides narratively with becoming a Rallyer / Club
+    Contender / Challenger / Ace. Per-option unlockLevel lives in AvatarCatalog (same place BadgeCatalog
+    keeps thresholds). No scattered magic numbers.
+  - ETHICS INVARIANT — SKIN TONES ARE NEVER GATED. Skin colour is an identity choice, not a reward;
+    all skinColors are starter-tier. Tested. Never put a skin tone behind a level. Every category also
+    keeps ≥3 starter options so a new player has real choice immediately (first-use experience, §12).
+    Tested in avatar_config_test.dart (default config all-starter, skin all-starter, ≥3 starters/cat).
+  - EDITOR UX: locked options are SHOWN, never hidden (motivating, not punishing — same as locked
+    BadgeTiles). Locked colour swatch = scrim + lock icon + "Lv N"; locked style chip = lock icon +
+    "{label} · Lv N"; both non-selectable. Tapping a locked option sets a transient hint banner ("Reach
+    Level N to unlock {label}") that clears on a real selection or tab change. A "Level N" chip sits in
+    the sheet header. While the level stream loads, level defaults to 1 (only starters selectable) so
+    the editor never blocks.
+  - The draft can't contain a locked id (you can only select unlocked ones); if a previously-saved
+    config somehow holds a now-locked id it renders fine in the preview and just shows as locked in the
+    grid — harmless edge case, no guard needed.
+
 NOT YET BUILT (future avatar work, deferred — keep honest):
-  - Unlockable items / rarity / unlock-on-level-up. The original plan had an `unlocked_items` Drift
-    table + UnlockCatalog + ItemRarity firing through the ProgressionReward seam. With DiceBear, an
-    "unlock" just means gating certain AvatarOption ids behind a level/badge in the catalog + a lock
-    overlay in the editor (same motivating-not-punishing pattern as locked BadgeTiles). No image
-    assets needed. Build when we want cosmetics to be a progression reward. If a Drift table is added
-    for unlocks, BackupService MUST cover it (see backup pitfall).
+  - FELT unlock moment: when a level-up newly unlocks cosmetics, celebrate via the existing
+    ProgressionReward seam (the post-save SnackBar). Pure to compute — diff old vs new level against
+    the catalog. Deliberately deferred to keep the gating commit focused; wire it when polishing
+    level-up feedback. Don't invent a parallel reward path — reuse progressionRewardProvider.
   - More categories DiceBear adventurer supports but we didn't expose yet: glasses, earrings,
-    features (freckles/blush), hairProbability, etc. Add to AvatarCatalog when desired.
+    features (freckles/blush), hairProbability, etc. Add to AvatarCatalog (with unlockLevel) when
+    desired — gating comes for free via unlockedAt.
 
 
 PLANNED FEATURE: EXTENDED GAMIFICATION
@@ -747,7 +775,8 @@ C. OFFLINE-FIRST SYNC ARCHITECTURE (Pro mode)
     multi-device updates are needed.
   - DERIVED-NOT-STORED STILL WINS: streaks, XP, levels, badges, quests, skill scores, profile radar are
     all PURE functions over the synced raw rows. So we sync the FACTS (sessions, skill_ratings,
-    equipment, unlocks, settings) and RE-DERIVE progression on each device identically. Do NOT sync
+    equipment, settings) and RE-DERIVE progression on each device identically — incl. cosmetic
+    unlocks, which are a pure function of level. Do NOT sync
     derived numbers as authoritative — re-derive them. (A Supabase edge function can recompute the same
     values for server-side verification / future leaderboards — community-ready invariant pays off.)
 
@@ -756,7 +785,9 @@ D. WHAT EVERY PIECE OF STATE MAPS TO (the "store everything" requirement)
 ------------------------------------------------------------------
   ALREADY DRIFT TABLES → become Supabase tables (1:1, same columns + a `user_id` column, RLS on
   user_id):
-    sessions, equipment_items, skill_ratings  (+ the planned trainer tables, unlocked_items).
+    sessions, equipment_items, skill_ratings  (+ the planned trainer tables). NOTE: cosmetic avatar
+    unlocks are DERIVED from player level (which is derived from synced sessions) — there is no
+    unlocked_items table to sync. Syncing the sessions re-derives every unlock identically per device.
   Each Postgres table: same UUID PK, createdAt/updatedAt/deletedAt, plus user_id uuid references
   auth.users. RLS policy: a user can only see/write rows where user_id = auth.uid().
 
