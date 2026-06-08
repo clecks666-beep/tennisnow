@@ -416,16 +416,36 @@ DRIFT GOTCHAS (learned)
   that bug is closed AND a header path exists — single-threaded WasmGC is already the faster, safe win
   over plain dart2js. The drift sqlite3.wasm/worker assets are independent of the Flutter renderer wasm;
   no conflict. Requires Flutter >= 3.27 (withValues; we run 3.44.1).
-- CI = TWO workflows: `ci.yml` (flutter analyze + flutter test on push/PR) and `pages.yml` (build+deploy,
-  main only). ci.yml runs build_runner FIRST (analyzer/tests import drift *.g.dart). analyze uses
-  `dart analyze` (NOT `flutter analyze`!). Why: `flutter analyze` exits non-zero on ANY issue incl.
-  info-level, and `--no-fatal-infos` did NOT stop that — burned 2 CI rounds learning this. `dart analyze`
-  fails on errors+warnings but is non-fatal on infos by DEFAULT, while still honoring the analysis_options
-  error promotions (unused_import/unused_local_variable = error). So: ERRORS + WARNINGS gate; the ~88
-  auto-fixable style infos (prefer_const, require_trailing_commas, prefer_null_aware) stay advisory. Clear
-  them with `dart fix --apply` in a Flutter-equipped session (can't run here — Flutter not installed), then
-  tighten to `dart analyze --fatal-infos`. Lesson: the un-gated Replicate asset commits shipped 2 real dead
-  imports — ci.yml caught them. Don't merge analyzer ERRORS.
+- CI = TWO workflows: `ci.yml` (analyze + flutter test on push/PR) and `pages.yml` (build+deploy,
+  main only). ci.yml runs build_runner FIRST (analyzer/tests import drift *.g.dart). The analyze gate is
+  `dart analyze --format=machine` piped to grep that fails ONLY on `^(ERROR|WARNING)\|` lines. Why the
+  song-and-dance (burned ~3 CI rounds learning this): BOTH `flutter analyze` AND bare `dart analyze` exit
+  non-zero on info-level issues in this project (dart analyze exited 3 on 88 infos), so neither exit code
+  nor `--no-fatal-infos` gives an "errors-only" gate. Machine format (uppercase SEVERITY first field, no
+  color/bullets) is the only deterministic way to isolate severity. So: ERRORS (incl. unused_import /
+  unused_local_variable, promoted to error in analysis_options) + WARNINGS gate; the ~88 auto-fixable style
+  infos (prefer_const, require_trailing_commas, prefer_null_aware) stay advisory. Clear them with
+  `dart fix --apply` in a Flutter-equipped session (can't run here — Flutter not installed), then tighten to
+  a bare `dart analyze --fatal-infos`. Lesson: the un-gated Replicate asset commits shipped 3 real dead
+  imports — ci.yml caught all three. Don't merge analyzer ERRORS. ALSO: when reading failed CI logs, the
+  error lines are at the TOP of analyze output (file order) — `tail` hides them; fetch enough lines.
+
+AI INTELLIGENCE LAYER — the coach (first §11 realization)
+---------------------------------------------------------
+- `features/coach` is the seed of the AI layer. Architecture chosen so a live model is a DROP-IN, not a
+  rewrite: `CoachContext` (pure, primitives + shared SkillScore only — no cross-feature imports, §2) is the
+  compact pre-aggregated payload an LLM would receive (§11 cost rule: aggregate first, never raw history).
+  `RuleBasedCoach.insight(ctx)` is the deterministic, offline, ZERO-TOKEN coach that always works (§6). The
+  live model swaps in at ONE seam — `coachInsightProvider` (presentation) — try model when reachable else
+  fall back; no consumer changes. `CoachInsight.source` (rule|ai) is shown honestly in `CoachCard` (never
+  fake AI, §7/§11). The presentation adapter (`coachContextProvider`) composes the PUBLIC session-stats /
+  trend / skill-scores / gamification providers (§2 allows composing public surfaces) — the domain stays
+  cross-feature-clean. `CoachCard` replaced the old `_InsightBanner` on Progress (coach subsumes the
+  headline; `ProgressInsight` domain+test kept but no longer wired into the screen).
+- NOT built yet (needs a session with network policy + API key, like Replicate): `core/ai/AiClient` seam +
+  a `ClaudeAiClient` + central prompt/cost layer. Deferred deliberately to avoid a consumer-less subsystem;
+  build it together with the live model wiring. Use the smallest model that does the coach job (Haiku-class)
+  and cache the insight, regenerating only when CoachContext changes (§11 cost rules).
 
 BACKUP/EXPORT MUST COVER EVERY TABLE + COLUMN (learned the hard way)
 -------------------------------------------------------------------
