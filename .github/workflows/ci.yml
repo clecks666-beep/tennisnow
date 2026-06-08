@@ -24,13 +24,20 @@ jobs:
       # Analyzer and tests import Drift-generated code (*.g.dart); generate it
       # first or analyze reports missing types and the tests fail to compile.
       - run: dart run build_runner build --delete-conflicting-outputs
-      # `dart analyze` (not `flutter analyze`): it fails on errors + warnings but
-      # is non-fatal on info-level issues by default. That's exactly the gate we
-      # want — errors (incl. unused_import / unused_local_variable, promoted to
-      # error in analysis_options.yaml) and warnings (e.g. future deprecations)
-      # block; the ~88 auto-fixable style infos (prefer_const,
-      # require_trailing_commas, …) stay advisory. Clear them with
-      # `dart fix --apply` in a Flutter-equipped session, then tighten to
-      # `dart analyze --fatal-infos` to enforce zero issues.
-      - run: dart analyze
+      # Gate on ERROR/WARNING severity only. Both `flutter analyze` and bare
+      # `dart analyze` exit non-zero on info-level issues in this project, so we
+      # use the stable machine format (SEVERITY|TYPE|CODE|FILE|LINE|COL|LEN|MSG,
+      # severity uppercased, no color/bullets) and fail only on ERROR|/WARNING|
+      # lines. Errors include unused_import / unused_local_variable (promoted to
+      # error in analysis_options.yaml). The ~88 auto-fixable style infos
+      # (prefer_const, require_trailing_commas, …) stay advisory — clear them
+      # with `dart fix --apply` in a Flutter-equipped session, then this can
+      # tighten to a bare `dart analyze --fatal-infos`.
+      - name: Analyze (fail on errors/warnings)
+        run: |
+          dart analyze --format=machine 2>&1 | tee analyze.txt || true
+          if grep -qE '^(ERROR|WARNING)\|' analyze.txt; then
+            echo "::error::Analyzer reported error/warning-severity issues — see log"
+            exit 1
+          fi
       - run: flutter test
