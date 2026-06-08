@@ -1,5 +1,6 @@
 import 'badge.dart';
 import 'gamification_snapshot.dart';
+import '../../../shared/domain/avatar/avatar_catalog.dart';
 
 /// What the player just earned, computed by diffing the gamification snapshot
 /// from before vs after a save. Pure value object (no Flutter, no I/O) so the
@@ -19,12 +20,17 @@ class ProgressionDelta {
   /// Badges that flipped from locked → earned with this action.
   final List<Achievement> newlyEarnedBadges;
 
+  /// True when this action's level-up crossed a cosmetic unlock threshold —
+  /// at least one avatar option in the catalog became newly available.
+  final bool unlocksAvatarStyles;
+
   const ProgressionDelta({
     required this.xpGained,
     required this.previousLevel,
     required this.newLevel,
     required this.newTitle,
     required this.newlyEarnedBadges,
+    this.unlocksAvatarStyles = false,
   });
 
   bool get leveledUp => newLevel > previousLevel;
@@ -58,12 +64,25 @@ class ProgressionDelta {
         if (a.earned && !earnedBefore.contains(a.badge.id)) a,
     ];
 
+    final prevLevel = before.level.level;
+    final nextLevel = after.level.level;
+    final unlocksAvatarStyles = nextLevel > prevLevel &&
+        [
+          ...AvatarCatalog.skinColors,
+          ...AvatarCatalog.hairStyles,
+          ...AvatarCatalog.hairColors,
+          ...AvatarCatalog.eyeStyles,
+          ...AvatarCatalog.mouthStyles,
+          ...AvatarCatalog.bgColors,
+        ].any((o) => o.unlockLevel > prevLevel && o.unlockLevel <= nextLevel);
+
     return ProgressionDelta(
       xpGained: after.totalXp - before.totalXp,
-      previousLevel: before.level.level,
-      newLevel: after.level.level,
+      previousLevel: prevLevel,
+      newLevel: nextLevel,
       newTitle: after.level.title,
       newlyEarnedBadges: newlyEarned,
+      unlocksAvatarStyles: unlocksAvatarStyles,
     );
   }
 }

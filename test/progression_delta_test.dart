@@ -3,6 +3,7 @@ import 'package:tennisnow/features/gamification/domain/badge.dart';
 import 'package:tennisnow/features/gamification/domain/gamification_snapshot.dart';
 import 'package:tennisnow/features/gamification/domain/progression_delta.dart';
 import 'package:tennisnow/features/gamification/domain/streak.dart';
+import 'package:tennisnow/core/constants/game_balance.dart';
 import 'package:tennisnow/shared/domain/progression/player_level.dart';
 
 void main() {
@@ -73,6 +74,46 @@ void main() {
       final d = ProgressionDelta.between(before, after);
       expect(d.newlyEarnedBadges, isEmpty);
       expect(d.hasCelebration, isFalse);
+    });
+  });
+
+  group('ProgressionDelta.unlocksAvatarStyles', () {
+    // Level thresholds (step(L) = 100 + (L-1)*50):
+    //   Lv1: 0..99  Lv2: 100..249  Lv3: 250..449
+    //   cosmeticTierRallyer = 3, cosmeticTierContender = 6
+
+    test('false when no level-up', () {
+      final d = ProgressionDelta.between(snap(10), snap(25));
+      expect(d.unlocksAvatarStyles, isFalse);
+    });
+
+    test('false for level-up that does not cross a cosmetic tier (lv1→lv2)', () {
+      final d = ProgressionDelta.between(snap(90), snap(110));
+      expect(d.previousLevel, 1);
+      expect(d.newLevel, 2);
+      expect(d.unlocksAvatarStyles, isFalse);
+    });
+
+    test('true when crossing cosmeticTierRallyer (lv2→lv3)', () {
+      // snap(240) = lv2, snap(260) = lv3 = cosmeticTierRallyer
+      final before = snap(240);
+      final after = snap(260);
+      expect(before.level.level, 2);
+      expect(after.level.level, GameBalance.cosmeticTierRallyer);
+      final d = ProgressionDelta.between(before, after);
+      expect(d.unlocksAvatarStyles, isTrue);
+    });
+
+    test('false when null baseline', () {
+      final d = ProgressionDelta.between(null, snap(260));
+      expect(d.unlocksAvatarStyles, isFalse);
+    });
+
+    test('false when level stays the same across a tier boundary value', () {
+      // Already at lv3 before and after — no tier newly crossed.
+      final d = ProgressionDelta.between(snap(260), snap(300));
+      expect(d.leveledUp, isFalse);
+      expect(d.unlocksAvatarStyles, isFalse);
     });
   });
 }
