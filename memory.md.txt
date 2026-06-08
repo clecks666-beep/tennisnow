@@ -483,9 +483,29 @@ HOW THIS MEMORY EVOLVES
   short-term noise.
 
 
-PLANNED FEATURE: TRAINER MODE (Coach Mode)
+TRAINER MODE (Coach Mode)
 ==========================================
-STATUS: Not yet built. Architect for it now; build after the single-player gamified loop is solid.
+STATUS: BUILT (v1 complete). Domain, Drift schema v5, repository, all presentation screens, routing, settings toggle.
+
+WHAT IS BUILT:
+  - 4 domain entities: Student, TrainingNote, StudentGoal, SkillAssessment (all sync-ready)
+  - Abstract TrainerRepository + DriftTrainerRepository (full CRUD)
+  - AppDatabase schema v5: 4 new tables + additive migration
+  - TrainerScreen: student list, FAB, motivating empty state
+  - StudentProfileScreen: header, training notes list, swipe-to-delete notes, archive/delete student
+  - AddStudentSheet: name, birth year, category chips
+  - AddNoteSheet: type chips, date picker, multi-line content
+  - trainer_providers.dart: repository provider, trainerModeProvider, activeStudentsProvider, notesForStudentProvider
+  - HomeShell → ConsumerWidget with conditional 3rd "Trainer" tab (currentIndex clamp guard for safety)
+  - router.dart: /trainer StatefulShellBranch + /trainer/student/:id top-level route
+  - AppPreferences + SettingsController: trainerModeEnabled
+  - Settings screen: Trainer mode SwitchListTile
+
+WHAT IS NOT YET BUILT (next steps):
+  - Goals UI (tables exist, domain exists, no screen yet)
+  - Skill assessments UI (same)
+  - AI coaching per student (analysis of notes/goals/assessments)
+  - BackupService extension to cover trainer tables
 
 CORE DECISION: Local-first to start, cloud-ready from day one.
   v1 stores all trainer data on-device (same pattern as player data). A trainer mode TOGGLE in Settings
