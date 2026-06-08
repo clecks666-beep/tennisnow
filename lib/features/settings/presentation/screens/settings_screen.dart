@@ -6,10 +6,13 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_text_styles.dart';
+import '../../../../design_system/widgets/avatar_editable_hero.dart';
 import '../../../../design_system/widgets/section_label.dart';
 import '../../../../design_system/widgets/selectable_chip_group.dart';
 import '../../../../shared/data/app_preferences.dart';
 import '../../../../shared/domain/session_type.dart';
+import '../../../player_profile/presentation/providers/avatar_provider.dart';
+import '../../../player_profile/presentation/widgets/avatar_editor_sheet.dart';
 import '../providers/settings_controller.dart';
 
 /// Settings: light personalization + control. Reachable from the Sessions tab.
@@ -49,12 +52,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsControllerProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
+    final avatarConfig = ref.watch(avatarConfigProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.screen),
         children: [
+          // Identity card — avatar + name + quick path to the editor.
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: AvatarEditableHero(
+                config: avatarConfig,
+                displayName: settings.displayName,
+                onEdit: () => AvatarEditorSheet.show(context),
+                avatarSize: 64,
+                nameStyle: AppTextStyles.titleMedium,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
           const SectionLabel('Your name', optional: true),
           TextField(
             controller: _nameController,
@@ -92,6 +111,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onChanged: (type) {
               if (type != null) controller.setDefaultSessionType(type);
             },
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+          const SectionLabel('Trainer mode'),
+          Text(
+            'Enable a dedicated tab to manage students, notes and goals.',
+            style: AppTextStyles.caption,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Card(
+            child: SwitchListTile(
+              secondary: const Icon(Icons.school_outlined,
+                  color: AppColors.primary),
+              title: const Text('Trainer mode'),
+              subtitle: const Text('Show the Trainer tab'),
+              value: settings.trainerModeEnabled,
+              onChanged: controller.setTrainerModeEnabled,
+            ),
           ),
 
           const SizedBox(height: AppSpacing.lg),

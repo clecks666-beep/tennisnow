@@ -27,6 +27,9 @@ dependencies:
   # Device-local UI preferences (NOT synced) — e.g. onboarding-seen flag.
   shared_preferences: ^2.2.3
 
+  # SVG rendering — used for the DiceBear avatar widget.
+  flutter_svg: ^2.0.9
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

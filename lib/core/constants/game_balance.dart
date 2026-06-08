@@ -31,11 +31,34 @@ class GameBalance {
   static const double skillRecencyHalfLifeDays = 30;
 
   /// Titles by minimum level, highest first. Looked up top-down.
+  /// Cosmetic-tier levels (3/6/10/15) keep their title so an avatar unlock
+  /// coincides narratively with the new title (both fire on the same level-up).
   static const List<({int minLevel, String title})> levelTitles = [
-    (minLevel: 15, title: 'Ace'),
-    (minLevel: 10, title: 'Challenger'),
-    (minLevel: 6, title: 'Club Contender'),
-    (minLevel: 3, title: 'Rallyer'),
+    (minLevel: 25, title: 'Pro-Am'),
+    (minLevel: 20, title: 'District Champion'),
+    (minLevel: 18, title: 'Elite'),
+    (minLevel: 15, title: 'Ace'),              // cosmeticTierAce
+    (minLevel: 13, title: 'Tournament Player'),
+    (minLevel: 10, title: 'Challenger'),       // cosmeticTierChallenger
+    (minLevel: 8, title: 'League Player'),
+    (minLevel: 6, title: 'Club Contender'),    // cosmeticTierContender
+    (minLevel: 5, title: 'Club Player'),
+    (minLevel: 3, title: 'Rallyer'),           // cosmeticTierRallyer
+    (minLevel: 2, title: 'Club Regular'),
     (minLevel: 1, title: 'Rookie'),
   ];
+
+  // ---- Cosmetic unlock tiers (avatar customisation) ----
+  // Avatar options are gated by player level so cosmetics become an honest,
+  // earned reward (★C/D). Tiers align with the title ladder above so an unlock
+  // narratively coincides with "becoming a Rallyer / Club Contender / …".
+  // Because level is derived from monotonic XP, an unlock is permanent without
+  // persisting anything — gating stays fully derived-not-stored & community-
+  // ready. NOTE: identity options (skin tones) are NEVER gated — only styles,
+  // expressions, fun hair colours and premium backgrounds.
+  static const int cosmeticTierStart = 1; // available from the first session
+  static const int cosmeticTierRallyer = 3;
+  static const int cosmeticTierContender = 6;
+  static const int cosmeticTierChallenger = 10;
+  static const int cosmeticTierAce = 15;
 }

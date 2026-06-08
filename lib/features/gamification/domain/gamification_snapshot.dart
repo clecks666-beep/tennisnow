@@ -9,12 +9,14 @@ class GamificationInputs {
   final int streakDays;
   final int matches;
   final int wins;
+  final int skillTaggedSessions;
 
   const GamificationInputs({
     required this.totalSessions,
     required this.streakDays,
     required this.matches,
     required this.wins,
+    this.skillTaggedSessions = 0,
   });
 
   int valueFor(BadgeMetric metric) {
@@ -27,6 +29,8 @@ class GamificationInputs {
         return matches;
       case BadgeMetric.wins:
         return wins;
+      case BadgeMetric.skillTaggedSessions:
+        return skillTaggedSessions;
     }
   }
 }

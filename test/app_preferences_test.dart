@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tennisnow/shared/data/app_preferences.dart';
+import 'package:tennisnow/shared/domain/avatar/avatar_config.dart';
 import 'package:tennisnow/shared/domain/session_type.dart';
 
 void main() {
@@ -55,6 +56,37 @@ void main() {
       final prefs = AppPreferences(await SharedPreferences.getInstance());
       await prefs.setDefaultSessionType(SessionType.match);
       expect(prefs.defaultSessionType, SessionType.match);
+    });
+  });
+
+  group('AppPreferences.avatarConfig', () {
+    test('defaults to AvatarConfig.defaultConfig on a fresh install', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = AppPreferences(await SharedPreferences.getInstance());
+      expect(prefs.avatarConfig, AvatarConfig.defaultConfig);
+    });
+
+    test('round-trips a customised config', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = AppPreferences(await SharedPreferences.getInstance());
+
+      const config = AvatarConfig(
+        skinColor: 'ae5d29',
+        hairStyle: 'long07',
+        hairColor: 'f4d150',
+        eyeStyle: 'variant06',
+        mouthStyle: 'variant03',
+        bgColor: '2e7d32',
+      );
+      await prefs.setAvatarConfig(config);
+
+      expect(prefs.avatarConfig, config);
+    });
+
+    test('falls back to the default config if stored JSON is corrupt', () async {
+      SharedPreferences.setMockInitialValues({'avatar_config': 'not-json'});
+      final prefs = AppPreferences(await SharedPreferences.getInstance());
+      expect(prefs.avatarConfig, AvatarConfig.defaultConfig);
     });
   });
 }

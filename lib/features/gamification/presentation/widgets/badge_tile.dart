@@ -8,10 +8,8 @@ import 'badge_visuals.dart';
 
 /// Renders one [Achievement] with explicit earned / locked states (do-not-break
 /// rule #5). Locked badges are dimmed and show progress toward the threshold —
-/// motivating, not punishing.
-///
-/// Uses the raster badge asset from assets/images/brand/badges/ when available
-/// (via [badgeAssetFor]); falls back to the Material icon from [badgeIconFor].
+/// motivating, not punishing. Rare/epic/legendary badges show a colored accent
+/// so progression feels premium and tiered.
 class BadgeTile extends StatelessWidget {
   final Achievement achievement;
 
@@ -20,8 +18,10 @@ class BadgeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final earned = achievement.earned;
-    final color = earned ? AppColors.primary : AppColors.textSecondary;
+    final rarity = achievement.badge.rarity;
+    final color = earned ? rarityColor(rarity) : AppColors.textSecondary;
     final assetPath = badgeAssetFor(achievement.badge.id);
+    final label = rarityLabel(rarity);
 
     return Opacity(
       opacity: earned ? 1 : 0.55,
@@ -29,11 +29,12 @@ class BadgeTile extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: earned
-              ? AppColors.primary.withValues(alpha: 0.08)
+              ? rarityColor(rarity).withValues(alpha: 0.09)
               : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
-            color: earned ? AppColors.primary : AppColors.outline,
+            color: earned ? rarityColor(rarity) : AppColors.outline,
+            width: earned && rarity != BadgeRarity.standard ? 1.5 : 1.0,
           ),
         ),
         child: Column(
@@ -56,8 +57,7 @@ class BadgeTile extends StatelessWidget {
                   Icon(badgeIconFor(achievement.badge.id), color: color),
                 const Spacer(),
                 if (earned)
-                  const Icon(Icons.check_circle,
-                      size: 18, color: AppColors.success)
+                  Icon(Icons.check_circle, size: 18, color: color)
                 else
                   const Icon(Icons.lock_outline,
                       size: 16, color: AppColors.textSecondary),
@@ -77,6 +77,10 @@ class BadgeTile extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
+            if (label != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              _RarityChip(label: label, color: rarityColor(rarity)),
+            ],
             if (!earned) ...[
               const SizedBox(height: AppSpacing.sm),
               ClipRRect(
@@ -85,7 +89,7 @@ class BadgeTile extends StatelessWidget {
                   value: achievement.progress,
                   minHeight: 5,
                   backgroundColor: AppColors.outline,
-                  color: AppColors.primary,
+                  color: rarityColor(rarity),
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -95,6 +99,35 @@ class BadgeTile extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RarityChip extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _RarityChip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs + 2, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: color,
+          letterSpacing: 0.4,
         ),
       ),
     );

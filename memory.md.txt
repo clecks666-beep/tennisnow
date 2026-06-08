@@ -483,9 +483,29 @@ HOW THIS MEMORY EVOLVES
   short-term noise.
 
 
-PLANNED FEATURE: TRAINER MODE (Coach Mode)
+TRAINER MODE (Coach Mode)
 ==========================================
-STATUS: Not yet built. Architect for it now; build after the single-player gamified loop is solid.
+STATUS: BUILT (v1 complete). Domain, Drift schema v5, repository, all presentation screens, routing, settings toggle.
+
+WHAT IS BUILT:
+  - 4 domain entities: Student, TrainingNote, StudentGoal, SkillAssessment (all sync-ready)
+  - Abstract TrainerRepository + DriftTrainerRepository (full CRUD)
+  - AppDatabase schema v5: 4 new tables + additive migration
+  - TrainerScreen: student list, FAB, motivating empty state
+  - StudentProfileScreen: header, training notes list, swipe-to-delete notes, archive/delete student
+  - AddStudentSheet: name, birth year, category chips
+  - AddNoteSheet: type chips, date picker, multi-line content
+  - trainer_providers.dart: repository provider, trainerModeProvider, activeStudentsProvider, notesForStudentProvider
+  - HomeShell → ConsumerWidget with conditional 3rd "Trainer" tab (currentIndex clamp guard for safety)
+  - router.dart: /trainer StatefulShellBranch + /trainer/student/:id top-level route
+  - AppPreferences + SettingsController: trainerModeEnabled
+  - Settings screen: Trainer mode SwitchListTile
+
+WHAT IS NOT YET BUILT (next steps):
+  - Goals UI (tables exist, domain exists, no screen yet)
+  - Skill assessments UI (same)
+  - AI coaching per student (analysis of notes/goals/assessments)
+  - BackupService extension to cover trainer tables
 
 CORE DECISION: Local-first to start, cloud-ready from day one.
   v1 stores all trainer data on-device (same pattern as player data). A trainer mode TOGGLE in Settings
@@ -546,140 +566,156 @@ PITFALL — SCOPE: Trainer mode is a significant feature. Do not mix its impleme
   features "while we're at it." Feature branch, dedicated schema bump, separate provider tree.
 
 
-PLANNED FEATURE: AVATAR SYSTEM (Gamification 2.0)
-==================================================
-STATUS: Not yet built. Design-phase; Replicate asset generation precedes Flutter implementation.
+AVATAR SYSTEM — BUILT (Gamification 2.0, DiceBear adventurer)
+=============================================================
+STATUS: BUILT (v1). DiceBear adventurer SVG avatars on the Player Profile, with a live editor.
+  The custom layered-PNG plan below it (struck through) was TRIED and ABANDONED — read why first.
 
-WHAT IT IS:
-  Each user builds a personal tennis character (comic/cartoon style) displayed on their Profile,
-  Achievements, future leaderboards, and the Trainer's student list. The avatar is assembled from
-  pre-made layered PNG assets — NO runtime AI, NO Replicate in the shipped app, fully offline.
+WHY THE LAYERED-PNG / REPLICATE PLAN WAS DROPPED (key learning):
+  We ran a real POC (committed under assets/images/avatar_poc/, generator /tmp/avatar_layer_poc.py):
+  generate each body part as an isolated PNG via Replicate flux-schnell, strip the white background
+  with Pillow, alpha-composite the layers in Dart. RESULT: it does NOT work. flux-schnell gives no
+  control over scale/anchor/proportion across separate prompts, so the hair layer doesn't sit on the
+  head, eyes/mouth float, etc. The "PITFALL — LAYER ALIGNMENT" warning turned out to be fatal, not
+  manageable. Full PRESET characters (one prompt → whole figure) look great, but lose the deep
+  customization the user wanted. So a generative-per-layer pipeline is the wrong tool here.
 
-TECHNICAL ARCHITECTURE — LAYER COMPOSITION:
-  The avatar is a Flutter Stack of Image.asset() widgets, each layer a PNG with a transparent
-  background. Layer order (bottom → top):
-    1. Background (court/stadium/abstract)
-    2. Body silhouette (one neutral base per gender-presentation option)
-    3. Skin layer — face, neck, arms (one PNG per skin tone, ~8 tones)
-    4. Eyes (4 variants, drawn on top of skin layer)
-    5. Mouth/expression (3 variants)
-    6. Beard / facial hair (4 variants incl. none)
-    7. Glasses (3 variants incl. none)
-    8. Hair (style variants; each style × color = separate PNG)
-    9. Clothing — top (style variants; each design × color = separate PNG)
-   10. Clothing — bottom/shorts (style × color)
-   11. Shoes (design × color)
-   12. Racket (model × color, held in playing-ready pose)
-   13. Accessories (wristband, cap, headband — future)
-  Rendered at a fixed logical size (e.g. 320×400 or similar) in the profile hero.
+THE SOLUTION — DiceBear adventurer (decided & built):
+  DiceBear (https://www.dicebear.com, MIT, API v9.x) ships avatar styles whose layers are DESIGNED to
+  compose perfectly — alignment is solved by the library, not by us. The `adventurer` style is a
+  friendly flat-vector character that fits the brand. We render it at RUNTIME as an SVG from the public
+  HTTP API; the params ARE the avatar (deterministic URL), so nothing is generated or stored as images.
+  - NO Replicate, NO Pillow, NO committed avatar PNGs, NO build step for avatars.
+  - Render via flutter_svg `SvgPicture.network(config.svgUrl)`. URL is built by AvatarConfig.svgUrl.
+  - Endpoint: https://api.dicebear.com/9.x/adventurer/svg?skinColor=..&hair=..&hairColor=..&eyes=..&
+    mouth=..&backgroundColor=..&backgroundType=solid&radius=50  (radius=50 → pre-clipped circle).
+  - NETWORK NOTE: api.dicebear.com is NOT in the on-web session's network allowlist (returns 403 in
+    this dev env), so the avatar can't be live-previewed from inside a web session — that's an env
+    policy limit, not a code bug. On real devices the app reaches it fine. If avatars render as the
+    grey person-placeholder in a web session, suspect the allowlist first. (Self-hosting DiceBear or
+    bundling its sprites locally is the offline-first upgrade path if we ever want zero network — the
+    package `@dicebear/collection` is MIT; could pre-render the catalog to assets. Postponed.)
 
-ASSET STRATEGY — REPLICATE DURING DEVELOPMENT ONLY:
-  - ALL avatar assets are generated once via Replicate (flux-schnell or similar) in a consistent
-    comic/cartoon style and committed to assets/images/avatar/.
-  - The shipped app bundles these PNGs statically. Replicate is NEVER called at runtime.
-  - No API keys needed in the production app. No network calls for avatar rendering. Fully offline.
-  - Style anchor for all Replicate prompts: "flat vector cartoon illustration, clean comic style,
-    modern premium mobile game character art, solid transparent background, tennis theme,
-    consistent line weight and style across all layers." Use IDENTICAL style anchors for every
-    generation batch so all layers match visually.
+ADVENTURER PARAM VALIDITY (PITFALL — learned): the adventurer style only accepts hair = `short01`..
+  `short19` and `long01`..`long26`. Made-up ids like `curly01`/`braids01`/`pixie` are SILENTLY ignored
+  (DiceBear falls back to a default) — no error, just "my hair picker does nothing." eyes = `variant01`
+  ..`variant26`, mouth = `variant01`..`variant30`. skinColor/hairColor/backgroundColor accept ANY hex
+  (6 chars, no '#'). Whenever extending AvatarCatalog, only use ids in these ranges.
 
-ASSET SCALE (compact MVP, decided):
-  ~5 options per category. Pre-colored variants (each color = separate PNG, no runtime colorizing).
-  Approximate counts:
-    Hair shapes: 5. Colors per shape: 6 (black, brown, blonde, red, grey, special). → 30 PNGs
-    Skin tones: 8 (one PNG per tone for the skin layer). → 8 PNGs
-    Eyes: 4 variants. → 4 PNGs
-    Mouth: 3 variants. → 3 PNGs
-    Beard: 4 variants (incl. none). → 4 PNGs
-    Glasses: 3 variants (incl. none). → 3 PNGs
-    Clothing tops: 5 designs × 6 colors. → 30 PNGs
-    Clothing bottoms: 4 designs × 5 colors. → 20 PNGs
-    Shoes: 4 designs × 4 colors. → 16 PNGs
-    Rackets: 5 models × 4 colors. → 20 PNGs
-    Backgrounds: 7 (clay, hard, grass, stadium, practice, abstract, premium). → 7 PNGs
-  Total: ~150 assets. All committed to the repo under assets/images/avatar/.
+WHAT'S BUILT (files):
+  - shared/domain/avatar/avatar_config.dart — AvatarConfig value object (skinColor, hairStyle,
+    hairColor, eyeStyle, mouthStyle, bgColor), immutable + copyWith, toJson/fromJson + svgUrl getter.
+    Pure domain (no Flutter). defaultConfig gives every new player a valid avatar instantly.
+  - shared/domain/avatar/avatar_catalog.dart — AvatarCatalog: pure catalog of AvatarOption lists
+    (skinColors, hairStyles, hairColors, eyeStyles, mouthStyles, bgColors). Single source of truth,
+    same pattern as BadgeCatalog/SkillCatalog. Extend deliberately; respect the param ranges above.
+  - design_system/widgets/avatar_widget.dart — AvatarWidget(config, size): renders the SVG with a
+    circular grey placeholder while loading. Reusable everywhere (profile hero, future list thumbs).
+  - features/player_profile/presentation/providers/avatar_provider.dart — avatarConfigProvider
+    (StateNotifierProvider) reads/persists AvatarConfig via AppPreferences (prefs aren't reactive on
+    their own — wrapped in a notifier, same rule as settingsControllerProvider). PUBLIC surface.
+  - features/player_profile/presentation/widgets/avatar_editor_sheet.dart — AvatarEditorSheet: modal
+    bottom sheet, category tabs (Skin/Style/Hair/Eyes/Mouth/BG), live preview, edits kept in local
+    _draft and only committed on Save (dismiss = discard). Color swatches + labeled style chips.
+  - player_profile_screen.dart — _AvatarHero at the top (avatar + name + edit badge), always visible
+    even before any logged session (independent of skill data), opens the editor sheet.
 
-DOMAIN MODEL:
-  - AvatarConfig { hairStyleId, hairColorId, skinToneId, eyeVariantId, mouthVariantId,
-      beardVariantId, glassesVariantId, topStyleId, topColorId, bottomStyleId, bottomColorId,
-      shoeStyleId, shoeColorId, racketModelId, racketColorId, backgroundId }
-  - Persisted in AppPreferences (device-local, NOT synced — cosmetic preference, not domain data).
-    Exception: when community/sharing lands, export AvatarConfig as part of the shareable PlayerCard.
-  - AvatarCatalog: pure domain catalog mapping every *Id to its asset path and metadata
-    (displayName, rarity, unlockCondition). The single source of truth — no string literals scattered.
+PERSISTENCE: AvatarConfig lives in AppPreferences (device-local, cosmetic — not domain data, not
+  synced). Stored as a JSON string under key 'avatar_config'. When community/sharing lands, export
+  AvatarConfig as part of the shareable PlayerCard (and it moves to account-level for Pro).
 
-UNLOCKABLE ITEMS — NEW DRIFT TABLE:
-  - Table `unlocked_items` (sync-ready): { id UUID, itemId String, rarity (standard|rare|epic|legendary),
-      source (level_up|badge|streak|challenge), unlockedAt DateTime,
-      createdAt, updatedAt, deletedAt }
-  - A Dart enum `ItemRarity { standard, rare, epic, legendary }`.
-  - All items start locked. The default loadout uses only standard-rarity items (always available
-    without unlocking) so a new user has a valid avatar immediately.
-  - `UnlockCatalog` (pure domain, like BadgeCatalog): maps itemId → unlock condition. Deterministic,
-    testable, server-recomputable (community-ready invariant).
-  - The "unlock moment" fires through the existing ProgressionReward seam (same SnackBar pattern as
-    XP/badge felt-moments). Reuse that seam — do NOT invent a parallel reward pathway.
-  - BackupService MUST cover unlocked_items when this ships (learned pitfall — see backup section).
+COSMETIC GATING — BUILT (level-gated, derived-not-stored):
+  - Avatar options are gated by PLAYER LEVEL, making cosmetics an earned reward (★C/D). Each
+    AvatarOption carries `unlockLevel` (default GameBalance.cosmeticTierStart = 1). `unlockedAt(level)`
+    = level >= unlockLevel; `isStarter` = available from the start.
+  - KEY DECISION — NO `unlocked_items` TABLE, NOTHING PERSISTED. The original plan had a Drift
+    unlocked-items table + UnlockCatalog + ItemRarity. Not needed: a player's level is derived from
+    MONOTONIC XP (XP only ever goes up), so `unlockedAt` is monotonic too — once unlocked, always
+    unlocked. Gating is therefore a PURE function of the current level (read live from the public
+    gamificationProvider). Fully derived-not-stored, server-recomputable, community-ready, and the
+    BackupService needs NO change (there's no unlock state to back up). Only revisit a persisted table
+    if we ever need unlock TIMESTAMPS / a "newly unlocked" history — the gating itself never needs one.
+  - TIERS live in GameBalance (cosmeticTierStart/Rallyer/Contender/Challenger/Ace = 1/3/6/10/15),
+    aligned to the title ladder so an unlock coincides narratively with becoming a Rallyer / Club
+    Contender / Challenger / Ace. Per-option unlockLevel lives in AvatarCatalog (same place BadgeCatalog
+    keeps thresholds). No scattered magic numbers.
+  - ETHICS INVARIANT — SKIN TONES ARE NEVER GATED. Skin colour is an identity choice, not a reward;
+    all skinColors are starter-tier. Tested. Never put a skin tone behind a level. Every category also
+    keeps ≥3 starter options so a new player has real choice immediately (first-use experience, §12).
+    Tested in avatar_config_test.dart (default config all-starter, skin all-starter, ≥3 starters/cat).
+  - EDITOR UX: locked options are SHOWN, never hidden (motivating, not punishing — same as locked
+    BadgeTiles). Locked colour swatch = scrim + lock icon + "Lv N"; locked style chip = lock icon +
+    "{label} · Lv N"; both non-selectable. Tapping a locked option sets a transient hint banner ("Reach
+    Level N to unlock {label}") that clears on a real selection or tab change. A "Level N" chip sits in
+    the sheet header. While the level stream loads, level defaults to 1 (only starters selectable) so
+    the editor never blocks.
+  - The draft can't contain a locked id (you can only select unlocked ones); if a previously-saved
+    config somehow holds a now-locked id it renders fine in the preview and just shows as locked in the
+    grid — harmless edge case, no guard needed.
 
-AVATAR EDITOR UI:
-  - A scrollable sheet or dedicated /avatar route with category tabs (Hair, Face, Clothing, Gear, Background).
-  - Each tab shows a horizontal scroll of option thumbnails; tapping previews it live on a mini avatar.
-  - Locked items shown with a lock overlay + unlock hint (e.g. "Reach Level 10"). Same motivating-not-
-    punishing pattern as locked badges in BadgeTile.
-  - All design tokens from design_system/ — no one-off colors/sizes.
+FELT UNLOCK MOMENT — BUILT: ProgressionDelta.unlocksAvatarStyles (bool) is computed in
+  between() — checks if any AvatarCatalog option has unlockLevel in (previousLevel, newLevel].
+  The level-up SnackBar subtitle appends "✨ New avatar styles unlocked!" when true. No new
+  persistence; pure domain check. Tests in progression_delta_test.dart.
 
-PITFALL — LAYER ALIGNMENT: Every PNG asset in a layer MUST be generated at the same canvas size and
-  with the character positioned identically (same anchor point, same proportions). A misaligned hair
-  layer on top of a face layer breaks the composition. Enforce this with a strict style + position
-  prompt for every Replicate call: "character centered, full body visible, same canvas size, same
-  proportions as all other layers."
+AVATAR ON MULTIPLE SURFACES — BUILT:
+  - AvatarEditableHero (design_system/widgets) — reusable avatar+edit-badge+name+link widget,
+    parameterisable by avatarSize/nameStyle. Replaces the private _AvatarHero in profile.
+  - Settings screen: identity card at top (64px avatar, path to editor).
+  - Achievements screen: compact _PlayerHeader (48px avatar + name + level/title above streak).
 
-PITFALL — REPLICATE SCOPE CREEP: Avatar assets take many Replicate calls. Always batch them (sequential
-  with rate-limiting, same pattern as existing asset generator). Never generate at runtime. Track all
-  generated asset IDs in assets/images/avatar/manifest.json.
+NOT YET BUILT (future avatar work, deferred):
+  - More DiceBear categories not yet exposed: glasses, earrings, features (freckles/blush),
+    hairProbability, etc. Add to AvatarCatalog (with unlockLevel) when desired.
 
 
-PLANNED FEATURE: EXTENDED GAMIFICATION
-=======================================
-STATUS: Foundation is built (XP, Levels, Streaks, Badges, Quests). Extensions planned below.
+EXTENDED GAMIFICATION — PARTIALLY BUILT
+========================================
+STATUS: Foundation complete. First extension round shipped. See below for built vs. planned.
 
-ACHIEVEMENT SYSTEM EXPANSION:
-  Current BadgeCatalog has 8 badges. Planned additions (add to catalog deliberately, keep meaningful):
-    Volume:  hundred_sessions (100 sessions), two_hundred_sessions (200), first_week (7 distinct days)
-    Matches: fifty_matches (50 matches), hundred_wins (100 wins)
-    Streaks: streak_14 (14-day), streak_30 (30-day)
-    Skills:  skill_rated (tag skills in first session), skill_master (any skill reaches avg ≥ 4.0)
-    Quests:  weekly_complete (finish all 3 weekly quests in one week)
-    Profile: profile_complete (fill in name + default type in Settings)
-  Each new badge needs: BadgeDefinition in BadgeCatalog, PNG in assets/images/brand/badges/, entry in
-  badgeAssetFor(). Follow existing pattern exactly — nothing else to wire.
-  BadgeRarity: add `BadgeRarity { standard, rare, epic, legendary }` to badge.dart and set on each
-  definition. Legendary badges (streak_30, hundred_wins) unlock rare avatar items via UnlockCatalog.
+BUILT (shipped):
+  BadgeRarity { standard, rare, epic, legendary } in badge.dart — rarity field on BadgeDefinition
+    (default standard). Rarity drives BadgeTile visuals (colored border/bg/chip/progress bar) and
+    is available for future cosmetic unlock triggers.
+  New badges shipped (BadgeCatalog now has 15 badges):
+    Volume:  hundred_sessions (epic), two_hundred_sessions (legendary)
+    Streaks: streak_14 (epic), streak_30 (legendary)
+    Matches: fifty_matches (epic), hundred_wins (legendary)
+    Skills:  skill_rated (standard) — new BadgeMetric.skillTaggedSessions wired through
+             GamificationInputs + DriftGamificationRepository (skillSessions was already queried
+             for XP, now also fed to badge inputs).
+  Level title ladder expanded (GameBalance.levelTitles) to 12 levels:
+    1=Rookie, 2=Club Regular, 3=Rallyer(★), 5=Club Player, 6=Club Contender(★), 8=League Player,
+    10=Challenger(★), 13=Tournament Player, 15=Ace(★), 18=Elite, 20=District Champion, 25=Pro-Am.
+    (★ = cosmetic tier; title aligns with avatar unlock so they fire together on the same level-up.)
 
-XP SYSTEM EXTENSION:
+PLANNED (not yet built — keep honest):
+  - skill_master (any skill reaches avg ≥ 4.0) — needs a per-skill score threshold check, a
+    different kind of metric (not a simple int counter). Wire when skill scores are stable.
+  - weekly_complete (finish all 3 quests in one week) — needs quest completion tracking. Deferred.
+  - profile_complete (fill in name + default type) — simple to add when it adds clear value.
+  - first_week (7 distinct calendar days with a session) — needs a distinctDays metric in
+    GamificationInputs; add watchDistinctSessionDays() to AppDatabase when needed.
+  - Badge PNG assets for new badges (hundred_sessions, streak_14, streak_30, fifty_matches,
+    hundred_wins, skill_rated, two_hundred_sessions). Until assets are added, the tile falls back
+    to the icon from badgeIconFor(). No blocker.
+
+XP SYSTEM EXTENSION (still planned):
   Current sources: sessions, matches, wins, skill-tagged sessions (GameBalance constants).
-  Planned additional XP sources (add to XpRules, update GameBalance — keep pure/deterministic):
-    - Goal completion (StudentGoal for trainer mode; for player: future personal goals feature)
-    - Weekly quest completion bonus (revisit ADR — originally set to 0 to avoid farming; reconsider
-      only with a clearly non-farmable design, e.g. flat weekly cap)
-  DO NOT add XP sources that fluctuate downward (would break the monotonic XP invariant).
+  Additional sources to consider (keep monotonic — no downward XP):
+    - Goal completion, weekly quest bonus (revisit with non-farmable design).
+  DO NOT add XP sources that fluctuate downward.
 
-LEVEL TITLES EXPANSION:
-  Current titles cover early levels. Extend the title list in GameBalance for higher levels as the
-  curve grows. Titles should escalate credibly: Rookie → Club Regular → Club Player → Club Contender
-  → League Player → Tournament Regular → Tournament Player → Elite Club → District Champion → Pro-Am.
-  Keep titles tennis-authentic (memory invariant: real tennis semantics, not generic RPG words).
-
-RARITY & COSMETIC UNLOCK MAP (when avatar system ships):
-  Standard items: always available, no unlock needed. Default avatar uses only standard.
+RARITY & FUTURE COSMETIC UNLOCK MAP:
+  Standard items: always available. Default avatar uses only standard.
   Rare items:     unlock at Level 5, streak_7, ten_wins.
   Epic items:     unlock at Level 15, streak_14, fifty_matches.
   Legendary items: unlock at Level 25, streak_30, hundred_wins.
-  Map lives in UnlockCatalog (pure domain, not hardcoded in UI).
+  When building an UnlockCatalog: keep it pure domain, not hardcoded in UI.
 
-COMMUNITY-READY NOTE: all XP, levels, badge states, and unlock conditions are pure+deterministic.
+COMMUNITY-READY NOTE: all badge states and unlock conditions are pure+deterministic.
   When leaderboards/seasons arrive, a server can recompute every player's state from their sessions.
-  Do not store a player's rarity level or title as an opaque value — always re-derive from XP/events.
+  Never store a player's rarity level or title as an opaque value — always re-derive.
 
 
 ================================================================================
@@ -771,7 +807,8 @@ C. OFFLINE-FIRST SYNC ARCHITECTURE (Pro mode)
     multi-device updates are needed.
   - DERIVED-NOT-STORED STILL WINS: streaks, XP, levels, badges, quests, skill scores, profile radar are
     all PURE functions over the synced raw rows. So we sync the FACTS (sessions, skill_ratings,
-    equipment, unlocks, settings) and RE-DERIVE progression on each device identically. Do NOT sync
+    equipment, settings) and RE-DERIVE progression on each device identically — incl. cosmetic
+    unlocks, which are a pure function of level. Do NOT sync
     derived numbers as authoritative — re-derive them. (A Supabase edge function can recompute the same
     values for server-side verification / future leaderboards — community-ready invariant pays off.)
 
@@ -780,7 +817,9 @@ D. WHAT EVERY PIECE OF STATE MAPS TO (the "store everything" requirement)
 ------------------------------------------------------------------
   ALREADY DRIFT TABLES → become Supabase tables (1:1, same columns + a `user_id` column, RLS on
   user_id):
-    sessions, equipment_items, skill_ratings  (+ the planned trainer tables, unlocked_items).
+    sessions, equipment_items, skill_ratings  (+ the planned trainer tables). NOTE: cosmetic avatar
+    unlocks are DERIVED from player level (which is derived from synced sessions) — there is no
+    unlocked_items table to sync. Syncing the sessions re-derives every unlock identically per device.
   Each Postgres table: same UUID PK, createdAt/updatedAt/deletedAt, plus user_id uuid references
   auth.users. RLS policy: a user can only see/write rows where user_id = auth.uid().
 

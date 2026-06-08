@@ -25,10 +25,12 @@ void showProgressionFeedback(
   messenger.clearSnackBars();
 
   if (delta.leveledUp) {
+    final avatarNote =
+        delta.unlocksAvatarStyles ? ' · ✨ New avatar styles unlocked!' : '';
     messenger.showSnackBar(_celebration(
       leading: _LevelMedal(level: delta.newLevel),
       title: 'Level up! You reached level ${delta.newLevel}',
-      subtitle: "You're now a ${delta.newTitle}$xpSuffix",
+      subtitle: "You're now a ${delta.newTitle}$xpSuffix$avatarNote",
     ));
     return;
   }

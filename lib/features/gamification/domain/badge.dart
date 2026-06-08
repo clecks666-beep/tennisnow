@@ -1,5 +1,9 @@
 /// The metric a badge is earned against. Maps to a value in [GamificationInputs].
-enum BadgeMetric { totalSessions, streakDays, matches, wins }
+enum BadgeMetric { totalSessions, streakDays, matches, wins, skillTaggedSessions }
+
+/// How rare a badge is — drives visual differentiation in the UI and (future)
+/// cosmetic unlock triggers. Standard is the baseline; legendary is the ceiling.
+enum BadgeRarity { standard, rare, epic, legendary }
 
 /// Definition of an earnable badge. Pure data — no UI (the icon is chosen in
 /// presentation by [id], keeping the domain Flutter-free, CLAUDE.md §2).
@@ -9,6 +13,7 @@ class BadgeDefinition {
   final String description;
   final BadgeMetric metric;
   final int threshold;
+  final BadgeRarity rarity;
 
   const BadgeDefinition({
     required this.id,
@@ -16,6 +21,7 @@ class BadgeDefinition {
     required this.description,
     required this.metric,
     required this.threshold,
+    this.rarity = BadgeRarity.standard,
   });
 }
 

@@ -7,8 +7,10 @@ import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_text_styles.dart';
 import '../../../../design_system/widgets/app_progress_bar.dart';
 import '../../../../design_system/widgets/async_value_view.dart';
+import '../../../../design_system/widgets/avatar_editable_hero.dart';
 import '../../../../design_system/widgets/empty_state.dart';
 import '../../../../design_system/widgets/skill_radar_chart.dart';
+import '../../../../shared/data/app_preferences.dart';
 import '../../../../shared/domain/skill/skill_score.dart';
 import '../../../gamification/presentation/providers/gamification_providers.dart';
 import '../../../gamification/presentation/widgets/next_badge_card.dart';
@@ -18,6 +20,8 @@ import '../../../skills/presentation/providers/skill_rating_providers.dart';
 import '../../../skills/presentation/widgets/skills_summary.dart';
 import '../../domain/category_score.dart';
 import '../../domain/player_profile_builder.dart';
+import '../providers/avatar_provider.dart';
+import '../widgets/avatar_editor_sheet.dart';
 
 /// The Player Profile — the gamified centrepiece (★ section): a real-tennis
 /// "character sheet" where logging becomes a felt progression. Level + title as
@@ -36,27 +40,47 @@ class PlayerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scoresAsync = ref.watch(skillScoresProvider);
+    final avatarConfig = ref.watch(avatarConfigProvider);
+    final displayName = ref.watch(appPreferencesProvider).displayName;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Player Profile')),
-      body: AsyncValueView<List<SkillScore>>(
-        value: scoresAsync,
-        onRetry: () => ref.invalidate(skillScoresProvider),
-        data: (scores) {
-          if (scores.isEmpty) {
-            return EmptyState(
-              imagePath:
-                  'assets/images/brand/empty_states/empty_player_profile.png',
-              title: 'Your game starts here',
-              message:
-                  'Log a session and tag the skills you worked on — your serve, '
-                  'backhand, spin and more will start leveling up on your profile.',
-              actionLabel: 'Log a session',
-              onAction: () => context.push('/log'),
-            );
-          }
-          return _ProfileContent(scores: scores);
-        },
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Avatar hero — always visible, independent of skill data.
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screen, vertical: AppSpacing.lg),
+            child: AvatarEditableHero(
+              config: avatarConfig,
+              displayName: displayName,
+              onEdit: () => AvatarEditorSheet.show(context),
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.outline),
+          Expanded(
+            child: AsyncValueView<List<SkillScore>>(
+              value: scoresAsync,
+              onRetry: () => ref.invalidate(skillScoresProvider),
+              data: (scores) {
+                if (scores.isEmpty) {
+                  return EmptyState(
+                    imagePath:
+                        'assets/images/brand/empty_states/empty_player_profile.png',
+                    title: 'Your game starts here',
+                    message:
+                        'Log a session and tag the skills you worked on — your serve, '
+                        'backhand, spin and more will start leveling up on your profile.',
+                    actionLabel: 'Log a session',
+                    onAction: () => context.push('/log'),
+                  );
+                }
+                return _ProfileContent(scores: scores);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
