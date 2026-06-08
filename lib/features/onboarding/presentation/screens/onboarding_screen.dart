@@ -6,7 +6,6 @@ import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_text_styles.dart';
 import '../../../../design_system/widgets/app_logo.dart';
-import '../../../../design_system/widgets/primary_button.dart';
 import '../../../../shared/data/app_preferences.dart';
 
 class _OnboardingPage {

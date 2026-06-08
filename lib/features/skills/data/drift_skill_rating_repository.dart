@@ -1,5 +1,3 @@
-import 'package:drift/drift.dart';
-
 import '../../../core/id/id_generator.dart';
 import '../../../shared/data/app_database.dart';
 import '../domain/skill_rating_repository.dart';

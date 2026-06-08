@@ -415,7 +415,15 @@ DRIFT GOTCHAS (learned)
   currently triggers a Chrome blank-screen bug (flutter#184843). Do NOT add COOP/COEP headers here until
   that bug is closed AND a header path exists — single-threaded WasmGC is already the faster, safe win
   over plain dart2js. The drift sqlite3.wasm/worker assets are independent of the Flutter renderer wasm;
-  no conflict. Requires Flutter >= 3.22 (we run 3.44.1).
+  no conflict. Requires Flutter >= 3.27 (withValues; we run 3.44.1).
+- CI = TWO workflows: `ci.yml` (flutter analyze + flutter test on push/PR) and `pages.yml` (build+deploy,
+  main only). ci.yml runs build_runner FIRST (analyzer/tests import drift *.g.dart). analyze uses
+  `--no-fatal-infos`: ERRORS (incl. unused_import/unused_local_variable, promoted to error in
+  analysis_options) and WARNINGS gate the build; ~88 pure style infos (prefer_const, require_trailing_commas,
+  prefer_null_aware) are advisory-only for now. To clear those infos run `dart fix --apply` in a
+  Flutter-equipped session (can't run here — Flutter not installed), then consider dropping --no-fatal-infos
+  to enforce them. Lesson: the un-gated Replicate asset commits shipped 2 real dead imports — ci.yml caught
+  them. Don't merge analyzer ERRORS.
 
 BACKUP/EXPORT MUST COVER EVERY TABLE + COLUMN (learned the hard way)
 -------------------------------------------------------------------
