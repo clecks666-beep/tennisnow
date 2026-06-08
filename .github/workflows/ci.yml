@@ -24,18 +24,13 @@ jobs:
       # Analyzer and tests import Drift-generated code (*.g.dart); generate it
       # first or analyze reports missing types and the tests fail to compile.
       - run: dart run build_runner build --delete-conflicting-outputs
-      # Gate on analyzer ERROR-severity issues only — incl. unused_import /
-      # unused_local_variable, promoted to error in analysis_options.yaml. The
-      # ~88 remaining lint infos (prefer_const, require_trailing_commas, …) are
-      # auto-fixable advisory debt: run `dart fix --apply` in a Flutter-equipped
-      # session to clear them, then this gate can be tightened to a bare
-      # `flutter analyze`. (flutter analyze exits non-zero on infos too, so we
-      # key off error-severity lines explicitly rather than its exit code.)
-      - name: Analyze (fail on errors only)
-        run: |
-          flutter analyze 2>&1 | tee analyze.log || true
-          if grep -qE '^[[:space:]]*error ' analyze.log; then
-            echo "::error::Analyzer reported error-severity issues — see log above"
-            exit 1
-          fi
+      # `dart analyze` (not `flutter analyze`): it fails on errors + warnings but
+      # is non-fatal on info-level issues by default. That's exactly the gate we
+      # want — errors (incl. unused_import / unused_local_variable, promoted to
+      # error in analysis_options.yaml) and warnings (e.g. future deprecations)
+      # block; the ~88 auto-fixable style infos (prefer_const,
+      # require_trailing_commas, …) stay advisory. Clear them with
+      # `dart fix --apply` in a Flutter-equipped session, then tighten to
+      # `dart analyze --fatal-infos` to enforce zero issues.
+      - run: dart analyze
       - run: flutter test

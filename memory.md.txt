@@ -418,12 +418,14 @@ DRIFT GOTCHAS (learned)
   no conflict. Requires Flutter >= 3.27 (withValues; we run 3.44.1).
 - CI = TWO workflows: `ci.yml` (flutter analyze + flutter test on push/PR) and `pages.yml` (build+deploy,
   main only). ci.yml runs build_runner FIRST (analyzer/tests import drift *.g.dart). analyze uses
-  `--no-fatal-infos`: ERRORS (incl. unused_import/unused_local_variable, promoted to error in
-  analysis_options) and WARNINGS gate the build; ~88 pure style infos (prefer_const, require_trailing_commas,
-  prefer_null_aware) are advisory-only for now. To clear those infos run `dart fix --apply` in a
-  Flutter-equipped session (can't run here — Flutter not installed), then consider dropping --no-fatal-infos
-  to enforce them. Lesson: the un-gated Replicate asset commits shipped 2 real dead imports — ci.yml caught
-  them. Don't merge analyzer ERRORS.
+  `dart analyze` (NOT `flutter analyze`!). Why: `flutter analyze` exits non-zero on ANY issue incl.
+  info-level, and `--no-fatal-infos` did NOT stop that — burned 2 CI rounds learning this. `dart analyze`
+  fails on errors+warnings but is non-fatal on infos by DEFAULT, while still honoring the analysis_options
+  error promotions (unused_import/unused_local_variable = error). So: ERRORS + WARNINGS gate; the ~88
+  auto-fixable style infos (prefer_const, require_trailing_commas, prefer_null_aware) stay advisory. Clear
+  them with `dart fix --apply` in a Flutter-equipped session (can't run here — Flutter not installed), then
+  tighten to `dart analyze --fatal-infos`. Lesson: the un-gated Replicate asset commits shipped 2 real dead
+  imports — ci.yml caught them. Don't merge analyzer ERRORS.
 
 BACKUP/EXPORT MUST COVER EVERY TABLE + COLUMN (learned the hard way)
 -------------------------------------------------------------------
