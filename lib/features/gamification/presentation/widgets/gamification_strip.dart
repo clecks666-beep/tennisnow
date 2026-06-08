@@ -96,7 +96,7 @@ class _Medallion extends StatelessWidget {
         height: 72,
         decoration: BoxDecoration(
           color: earned
-              ? AppColors.primary.withOpacity(0.10)
+              ? AppColors.primary.withValues(alpha: 0.10)
               : AppColors.surface,
           shape: BoxShape.circle,
           border: Border.all(

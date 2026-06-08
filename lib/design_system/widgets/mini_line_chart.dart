@@ -89,7 +89,7 @@ class _LineChartPainter extends CustomPainter {
 
     canvas.drawPath(
       areaPath,
-      Paint()..color = AppColors.primary.withOpacity(0.10),
+      Paint()..color = AppColors.primary.withValues(alpha: 0.10),
     );
 
     canvas.drawPath(

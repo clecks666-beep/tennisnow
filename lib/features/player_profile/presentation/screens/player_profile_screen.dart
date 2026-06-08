@@ -264,7 +264,7 @@ class _ProfileChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: filled ? color.withOpacity(0.10) : AppColors.surface,
+        color: filled ? color.withValues(alpha: 0.10) : AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(
           color: filled ? Colors.transparent : AppColors.outline,

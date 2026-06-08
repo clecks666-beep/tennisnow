@@ -31,7 +31,7 @@ class EquipmentTile extends StatelessWidget {
           height: 44,
           width: 44,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.12),
+            color: AppColors.primary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(AppRadii.md),
           ),
           child: Icon(equipmentIconFor(equipment.type), color: AppColors.primary),

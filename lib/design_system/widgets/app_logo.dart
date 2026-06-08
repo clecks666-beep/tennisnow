@@ -106,7 +106,7 @@ class _LogoPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = s * 0.035
-          ..color = AppColors.primary.withOpacity(0.25),
+          ..color = AppColors.primary.withValues(alpha: 0.25),
       );
     }
 

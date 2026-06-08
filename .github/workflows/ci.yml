@@ -1,0 +1,31 @@
+name: ci
+
+# Runs the analyzer and the test suite on every push and PR. pages.yml only
+# builds + deploys the web app — it never ran the tests, so a regression in the
+# pure scoring / skill / progression domain (the community-ready invariant,
+# CLAUDE.md §9.5) could ship to the live deploy unseen. This gate catches it.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  analyze-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.1
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # Analyzer and tests import Drift-generated code (*.g.dart); generate it
+      # first or analyze reports missing types and the tests fail to compile.
+      - run: dart run build_runner build --delete-conflicting-outputs
+      # Errors (incl. the unused_import/unused_local_variable promoted to error
+      # in analysis_options.yaml) and warnings (e.g. future deprecations) gate
+      # the build; pure style infos don't block on introduction.
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test

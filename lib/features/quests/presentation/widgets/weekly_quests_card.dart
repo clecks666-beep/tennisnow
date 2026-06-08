@@ -159,7 +159,7 @@ class _QuestIcon extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: (done ? AppColors.primary : AppColors.textSecondary)
-            .withOpacity(0.10),
+            .withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppRadii.sm),
       ),
       child: Icon(_iconFor(metric), color: color, size: 20),
@@ -192,7 +192,7 @@ class _CompletedPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: allDone
             ? AppColors.primary
-            : AppColors.primary.withOpacity(0.10),
+            : AppColors.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Text(

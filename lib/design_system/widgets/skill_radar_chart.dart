@@ -91,7 +91,7 @@ class _RadarPainter extends CustomPainter {
       valuePath,
       Paint()
         ..style = PaintingStyle.fill
-        ..color = AppColors.primary.withOpacity(0.18),
+        ..color = AppColors.primary.withValues(alpha: 0.18),
     );
     canvas.drawPath(
       valuePath,

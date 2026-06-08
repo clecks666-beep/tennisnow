@@ -82,7 +82,7 @@ class _TypeAvatar extends StatelessWidget {
       height: 44,
       width: 44,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.12),
+        color: AppColors.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadii.md),
       ),
       child: Icon(
@@ -113,7 +113,7 @@ class _ResultBadge extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Text(
